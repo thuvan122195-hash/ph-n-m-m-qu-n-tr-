@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>VANSILK – Đăng nhập</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root { --nen:#f6f1ea; --the:#ffffff; --chu:#2b2420; --phu:#8a7d72; --vien:#e6dcd0; --chinh:#8c2f39; --chinh-dam:#6f222b; --loi:#b3261e; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--nen); font-family:"Be Vietnam Pro", system-ui, sans-serif; color:var(--chu); }
+  .the { width:100%; max-width:380px; background:var(--the); border:1px solid var(--vien); border-radius:16px; padding:36px 28px 28px; box-shadow:0 10px 30px rgba(60,40,30,.06); }
+  .logo { font-family:"Playfair Display", serif; font-size:30px; letter-spacing:4px; text-align:center; color:var(--chinh); margin:0; }
+  .phude { text-align:center; color:var(--phu); font-size:14px; margin:6px 0 28px; }
+  label { display:block; font-size:13px; font-weight:500; margin:0 0 6px; }
+  input { width:100%; padding:12px 14px; margin-bottom:16px; font:inherit; font-size:16px; border:1px solid var(--vien); border-radius:10px; background:#fff; color:var(--chu); }
+  input:focus { outline:none; border-color:var(--chinh); box-shadow:0 0 0 3px rgba(140,47,57,.12); }
+  button { width:100%; padding:13px; border:0; border-radius:10px; font:inherit; font-weight:600; font-size:15px; background:var(--chinh); color:#fff; cursor:pointer; }
+  button:hover { background:var(--chinh-dam); }
+  button:disabled { opacity:.6; cursor:wait; }
+  .phu-btn { background:transparent; color:var(--chinh); border:1px solid var(--vien); margin-top:12px; }
+  .phu-btn:hover { background:#faf5ef; }
+  .thongbao { font-size:14px; margin:14px 0 0; min-height:20px; text-align:center; }
+  .thongbao.loi { color:var(--loi); }
+  .goiy { font-size:12px; color:var(--phu); text-align:center; margin-top:18px; }
+  .an { display:none; }
+  .chao { text-align:center; }
+  .chao h2 { font-size:20px; margin:0 0 4px; }
+  .chao .ma { color:var(--phu); font-size:14px; margin-bottom:20px; }
+  .dong { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--vien); font-size:14px; }
+  .dong span:first-child { color:var(--phu); }
+  .nhan { display:inline-block; padding:2px 10px; border-radius:99px; font-size:12px; font-weight:600; background:#f3e6e8; color:var(--chinh); }
+</style>
+</head>
+<body>
+  <main class="the">
+    <h1 class="logo">VANSILK</h1>
+    <p class="phude">Hệ thống nội bộ nhân viên</p>
+    <form id="formDangNhap">
+      <label for="maNV">Mã nhân viên</label>
+      <input id="maNV" placeholder="VD: NV001" autocomplete="username" required>
+      <label for="matKhau">Mật khẩu</label>
+      <input id="matKhau" type="password" placeholder="••••••••" autocomplete="current-password" required>
+      <button id="nutDangNhap" type="submit">Đăng nhập</button>
+      <p id="thongBao" class="thongbao"></p>
+      <p class="goiy">Quên mật khẩu? Liên hệ phòng Nhân sự để được cấp lại.</p>
+    </form>
+    <section id="khuChao" class="chao an">
+      <h2 id="tenNV"></h2>
+      <div id="maHienThi" class="ma"></div>
+      <div class="dong"><span>Phòng ban</span><span id="phongBan"></span></div>
+      <div class="dong"><span>Chức vụ</span><span id="chucVu"></span></div>
+      <div class="dong"><span>Quyền</span><span id="vaiTro" class="nhan"></span></div>
+      <button id="nutDangXuat" class="phu-btn" type="button">Đăng xuất</button>
+    </section>
+  </main>
+<script>
+  const SUPABASE_URL = "https://vulszpepubwjgjfxqbed.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_ov_B2wedxoZymZQ-j7DKxA_LOkRqXxl";
+  const DUOI_EMAIL = "@vansilk.local";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const $ = (id) => document.getElementById(id);
+  const TEN_QUYEN = { admin: "Quản trị", quan_ly: "Quản lý", nhan_vien: "Nhân viên" };
+  function baoLoi(msg) { $("thongBao").textContent = msg; $("thongBao").className = "thongbao loi"; }
+  function thanhEmail(nhap) { const s = nhap.trim().toLowerCase(); return s.includes("@") ? s : s + DUOI_EMAIL; }
+  async function taiHoSo(user) {
+    const { data, error } = await sb.from("nhan_vien").select("ma_nv, ho_ten, phong_ban, chuc_vu, vai_tro, trang_thai").eq("id", user.id).maybeSingle();
+    if (error) { baoLoi("Lỗi tải hồ sơ: " + error.message); return; }
+    if (!data) { await sb.auth.signOut(); baoLoi("Tài khoản chưa có hồ sơ nhân viên. Liên hệ phòng Nhân sự."); return; }
+    if (data.trang_thai !== "dang_lam") { await sb.auth.signOut(); baoLoi("Tài khoản đang tạm khoá. Liên hệ phòng Nhân sự."); return; }
+    $("tenNV").textContent = "Xin chào, " + data.ho_ten;
+    $("maHienThi").textContent = data.ma_nv;
+    $("phongBan").textContent = data.phong_ban || "—";
+    $("chucVu").textContent = data.chuc_vu || "—";
+    $("vaiTro").textContent = TEN_QUYEN[data.vai_tro] || data.vai_tro;
+    $("formDangNhap").classList.add("an");
+    $("khuChao").classList.remove("an");
+  }
+  $("formDangNhap").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("thongBao").textContent = "";
+    $("nutDangNhap").disabled = true; $("nutDangNhap").textContent = "Đang đăng nhập…";
+    const { data, error } = await sb.auth.signInWithPassword({ email: thanhEmail($("maNV").value), password: $("matKhau").value });
+    $("nutDangNhap").disabled = false; $("nutDangNhap").textContent = "Đăng nhập";
+    if (error) { baoLoi("Sai mã nhân viên hoặc mật khẩu."); return; }
+    await taiHoSo(data.user);
+  });
+  $("nutDangXuat").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    $("khuChao").classList.add("an"); $("formDangNhap").classList.remove("an"); $("matKhau").value = "";
+  });
+  sb.auth.getSession().then(({ data }) => { if (data.session) taiHoSo(data.session.user); });
+</script>
+</body>
+</html>
