@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Thiệp Hoa Thắm Tình</title>
+<meta name="description" content="Hoa cài satin làm tay gắn trên thiệp in logo và voucher của doanh nghiệp. Từ 30.000đ/bộ, từ 50 bộ miễn phí thiết kế.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@600&display=swap">
+<style>
+:root{
+  --paper:#fbf6f5; --card:#ffffff; --ink:#2b1a1d; --muted:#6f5a5e;
+  --wine:#7d1626; --wine-2:#a3283b; --leaf:#5f7a5c; --leaf-soft:#e4ebe1;
+  --blush:#f3e2e0; --line:#e8d8d6; --gold:#b98a3e; --on-wine:#fff7f5;
+  --todo:#fff4d6; --todo-line:#d9a520;
+  --f-display:"Cormorant Garamond","Times New Roman",serif;
+  --f-body:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;
+  --f-script:"Dancing Script","Brush Script MT",cursive;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#1b1214; --card:#251a1d; --ink:#f4e9e8; --muted:#c3afb2;
+  --wine:#e0697b; --wine-2:#f08797; --leaf:#9fbb9a; --leaf-soft:#25302a;
+  --blush:#33232a; --line:#3c2b30; --gold:#d8b06a; --on-wine:#1b1214;
+  --todo:#3a3020; --todo-line:#c9a24a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#1b1214; --card:#251a1d; --ink:#f4e9e8; --muted:#c3afb2;
+  --wine:#e0697b; --wine-2:#f08797; --leaf:#9fbb9a; --leaf-soft:#25302a;
+  --blush:#33232a; --line:#3c2b30; --gold:#d8b06a; --on-wine:#1b1214;
+  --todo:#3a3020; --todo-line:#c9a24a; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.65;padding:0 16px 96px}
+.wrap{max-width:720px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.9rem,5.4vw,2.6rem)}
+h3{font-size:1.4rem}
+p{margin:0}
+img{display:block;max-width:100%;height:auto;border-radius:6px}
+a{color:var(--wine)}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+em{font-style:normal;color:var(--wine);font-weight:600}
+.eyebrow{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--leaf);font-weight:600}
+.note{font-size:.86rem;color:var(--muted)}
+.micro{font-size:.82rem;color:var(--muted)}
+section{padding-block:52px;border-bottom:1px solid var(--line);display:grid;gap:18px}
+.stack{display:grid;gap:14px}
+
+/* ô chờ Sếp bổ sung */
+.todo{background:var(--todo);border:1.5px dashed var(--todo-line);border-radius:8px;padding:12px 14px;font-size:.92rem}
+.todo b{color:var(--ink)}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:16px;flex-wrap:wrap}
+.brand{display:grid;line-height:1.05}
+.brand b{font-family:var(--f-display);font-size:1.7rem;letter-spacing:.14em;color:var(--wine)}
+.brand small{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top .zalo{font-size:.88rem;color:var(--muted)}
+
+.hero{padding-block:16px 46px;display:grid;gap:22px;border-bottom:1px solid var(--line)}
+.hero h1{font-size:clamp(2.2rem,7.6vw,3.4rem);color:var(--wine)}
+.hero .sub{font-size:1.08rem;color:var(--muted);max-width:60ch}
+.hero-img{position:relative}
+.hero-img img{border-radius:10px;aspect-ratio:4/5;object-fit:cover;width:100%}
+.stamp{position:absolute;right:12px;bottom:12px;background:var(--card);color:var(--wine);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.9rem;box-shadow:0 4px 18px rgb(0 0 0/.12)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--leaf-soft);color:var(--leaf);border-radius:999px;padding:5px 12px;font-size:.84rem;font-weight:600}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 22px;border-radius:10px;background:var(--wine);color:var(--on-wine);font-weight:700;text-decoration:none;border:0;font:inherit;font-weight:700;cursor:pointer;text-align:center}
+.btn:hover{background:var(--wine-2)}
+.btn.ghost{background:transparent;color:var(--wine);border:1.5px solid var(--wine)}
+.cta-block{display:grid;gap:8px;justify-items:start}
+
+.pain-list{display:grid;gap:12px;padding:0;margin:0;list-style:none}
+.pain-list li{padding-left:28px;position:relative}
+.pain-list li::before{content:"";position:absolute;left:4px;top:.6em;width:12px;height:12px;border-radius:50% 0 50% 0;background:var(--leaf);transform:rotate(-20deg)}
+.layers{display:grid;gap:10px}
+.layers div{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--wine);border-radius:0 8px 8px 0;padding:12px 16px}
+.layers small{display:block;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--leaf);font-weight:600}
+
+.letter{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:24px 20px;display:grid;gap:10px;box-shadow:0 10px 30px -18px rgb(80 20 30/.35)}
+.letter .dear{font-family:var(--f-script);font-size:1.6rem;color:var(--wine)}
+.letter blockquote{margin:0;font-family:var(--f-display);font-size:1.28rem;font-style:italic;line-height:1.45}
+
+.gold-lines{display:grid;gap:10px}
+.gold-lines p{padding:12px 16px;background:var(--card);border-left:3px solid var(--gold);border-radius:0 6px 6px 0}
+
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.95rem;min-width:520px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--leaf)}
+td:last-child{color:var(--wine);font-weight:600}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.two>div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.two ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.yes h3{color:var(--leaf)} .no h3{color:var(--muted)}
+
+.gal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gal figure{margin:0;display:grid;gap:6px}
+.gal img{aspect-ratio:1/1;object-fit:cover;width:100%}
+.gal .wide{grid-column:1/-1}
+.gal .wide img{aspect-ratio:4/3}
+.gal figcaption{font-size:.8rem;color:var(--muted)}
+
+.calc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:14px}
+.calc .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+label{display:grid;gap:6px;font-weight:600;font-size:.92rem;min-width:0}
+input{font:inherit;font-weight:500;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+.result{background:var(--blush);border-radius:8px;padding:14px 16px;display:grid;gap:4px;font-variant-numeric:tabular-nums}
+.result b{font-family:var(--f-display);font-size:1.7rem;color:var(--wine)}
+
+.steps{display:grid;gap:12px;counter-reset:s;margin:0;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
+.steps li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--wine);color:var(--on-wine);display:grid;place-items:center;font-weight:700;font-size:.9rem}
+
+details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+details+details{margin-top:10px}
+summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--wine);font-weight:700}
+details[open] summary::after{content:"–"}
+details p{margin-top:10px}
+
+.stack-list{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.stack-list div{display:flex;justify-content:space-between;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line)}
+.stack-list div:last-child{border-bottom:0}
+.ladder{display:grid;gap:10px}
+.rung{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:baseline;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.rung.hot{border:2px solid var(--wine)}
+.rung .p{font-family:var(--f-display);font-size:1.7rem;font-weight:700;color:var(--wine);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rung small{grid-column:1/-1;color:var(--muted);font-size:.85rem}
+
+.gift{background:var(--leaf-soft);border-radius:10px;padding:20px;display:grid;gap:8px}
+.gift h3{color:var(--leaf)}
+
+.coll{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.coll>div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:6px;align-content:start;min-width:0}
+.coll b{font-family:var(--f-display);font-size:1.3rem;color:var(--wine);line-height:1.2}
+.coll span{font-size:.93rem}
+.coll .price{font-weight:700;color:var(--leaf)}
+
+#dat-qua{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px 18px;margin-top:40px;box-shadow:0 18px 40px -26px rgb(80 20 30/.45)}
+.qty{display:flex;align-items:center;gap:8px}
+.qty button{width:48px;height:48px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:1.4rem;cursor:pointer;flex:none}
+.qty input{text-align:center;font-size:1.2rem;font-weight:700;max-width:120px}
+.bill{background:var(--blush);border-radius:10px;padding:16px;display:grid;gap:6px;font-variant-numeric:tabular-nums}
+.bill div{display:flex;justify-content:space-between;gap:12px}
+.bill .total{font-family:var(--f-display);font-size:1.7rem;font-weight:700;color:var(--wine);border-top:1px dashed var(--muted);padding-top:8px;margin-top:4px}
+.perk{border:1.5px dashed var(--gold);border-radius:10px;padding:12px 14px;background:var(--paper);font-size:.93rem}
+.guarantee{display:grid;grid-template-columns:56px 1fr;gap:14px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--paper)}
+.seal{width:56px;height:56px;border-radius:50%;border:2px solid var(--gold);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;color:var(--gold);font-size:.72rem;text-align:center;line-height:1.05}
+
+footer{padding-block:36px;font-size:.86rem;color:var(--muted);display:grid;gap:6px;text-align:center;justify-items:center}
+.logo{display:inline-grid;place-items:center;background:#fff;border-radius:10px;padding:6px 10px}
+.logo img{height:64px;width:auto;border-radius:0}
+
+.sticky{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:5}
+.sticky .btn{width:100%;max-width:720px}
+@media (min-width:760px){.hero{grid-template-columns:1.05fr .95fr;align-items:center}.gal{grid-template-columns:repeat(3,minmax(0,1fr))}.gal .wide{grid-column:span 3}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <span class="brand"><b>LỤA LÀ</b><small>Quà tặng satin cá nhân hoá</small></span>
+    <span class="zalo">Zalo 0879 707 007</span>
+  </div>
+
+  <!-- Bước 1 + 2: Tiêu đề & tiêu đề phụ -->
+  <header class="hero">
+    <div class="stack">
+      <p class="eyebrow">Thiệp Hoa Thắm Tình · quà voucher cho chủ doanh nghiệp</p>
+      <h1>Tặng khách bông hoa 30.000đ, khách cầm voucher quay lại</h1>
+      <p class="sub">Hoa cài satin do 8 chị phụ nữ làm tay, gắn trên tấm thiệp in <strong>logo và voucher của doanh nghiệp chị</strong>. Từ 50 bộ được thiết kế thiệp miễn phí. Vân Lụa Là, 9 năm trong nghề lụa, đã cùng hơn 65 chủ doanh nghiệp làm sản phẩm phễu.</p>
+      <div class="chips"><span class="chip">Từ 20.000đ/bộ</span><span class="chip">Thiết kế miễn phí từ 50 bộ</span><span class="chip">Có hoá đơn VAT</span></div>
+      <div class="cta-block">
+        <a class="btn" href="#dat-qua">TÔI MUỐN XEM GIÁ CHO SỐ BỘ CỦA TÔI</a>
+        <span class="micro">Tính tiền ngay trên trang · chưa phải trả gì</span>
+      </div>
+    </div>
+    <div class="hero-img">
+      <img src="img/a1.jpg" alt="Hoa hồng satin đỏ đô gắn trên thiệp" width="900" height="1200">
+      <span class="stamp">từ 20.000đ / bộ</span>
+    </div>
+  </header>
+
+  <!-- Bước 8: Dành cho ai -->
+  <section>
+    <p class="eyebrow">Trang này dành cho ai</p>
+    <h2>Chị xem mình ở cột nào</h2>
+    <div class="two">
+      <div class="yes">
+        <h3>Hợp với chị nếu</h3>
+        <ul>
+          <li>Chị làm chủ nhà hàng, tiệm tóc, spa, shop phụ kiện, thời trang, và khách của chị phần lớn là nữ.</li>
+          <li>Chị muốn khách mới ghé lần đầu, hoặc khách cũ quay lại, mà không đổ thêm tiền quảng cáo.</li>
+          <li>Chị có đối tác cùng tệp khách nữ và muốn gửi quà qua họ để kéo khách về.</li>
+          <li>Chị cần quà tặng khách, nhân viên nữ, mẹ, chị em với số lượng từ vài bộ đến vài trăm bộ.</li>
+        </ul>
+      </div>
+      <div class="no">
+        <h3>Chưa hợp nếu</h3>
+        <ul>
+          <li>Chị cần hoa lụa tơ tằm. Hoa của LỤA LÀ làm bằng <strong>satin</strong>.</li>
+          <li>Chị cần một bó hoa to để chụp ảnh sự kiện trong một buổi.</li>
+          <li>Chị cần nhận hàng ngay trong ngày.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bước 3: Nỗi đau 3 lớp -->
+  <section>
+    <p class="eyebrow">Chuyện nhiều chủ doanh nghiệp đang gặp</p>
+    <h2>In voucher phát đi, khách cầm về rồi để đâu mất</h2>
+    <ul class="pain-list">
+      <li>Voucher giấy, tờ rơi: khách cầm lên, nhét túi, về nhà là bỏ.</li>
+      <li>Voucher gửi qua tin nhắn: khách lướt qua, quên luôn mã.</li>
+      <li>Quà tặng khách thì cốc, sổ, móc khoá, món nào cũng giống chục nơi khác đã tặng.</li>
+    </ul>
+    <div class="layers">
+      <div><small>Hôm nay</small>Tiền in ấn, tiền quà đã chi, mà không đếm được bao nhiêu khách quay lại nhờ nó.</div>
+      <div><small>3 đến 6 tháng sau</small>Muốn có khách lại phải chạy quảng cáo, và giá mỗi khách năm nay đắt hơn năm ngoái. Khách đến một lần rồi không quay lại.</div>
+      <div><small>Lâu dần</small>Chị chăm khách rất kỹ, nhưng khách nhớ món quà chứ không nhớ tên chị. Doanh nghiệp của chị lẫn vào đám đông.</div>
+    </div>
+    <p><strong>Có một cách khác: đưa voucher cho khách dưới dạng một món quà họ muốn giữ lại.</strong> Bông hoa còn cài trên áo thì tấm thiệp còn nằm trong túi xách, và mã voucher của chị nằm trên tấm thiệp đó.</p>
+  </section>
+
+  <!-- Bước 10: Rõ ràng -->
+  <section>
+    <p class="eyebrow">Thiệp Hoa Thắm Tình là gì</p>
+    <h2>Một bông hoa, một tấm thiệp mang tên chị, một lý do để quay lại</h2>
+    <div class="letter">
+      <span class="dear">Dear ________,</span>
+      <blockquote>Bạn là người tuyệt vời nhất, đẹp hơn mọi loài hoa trên thế giới này.</blockquote>
+      <span class="micro">Lời in sẵn trên thiệp mẫu chung. Từ 50 bộ, lời chúc này đổi theo ý doanh nghiệp.</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Trong một bộ</th><th>Chi tiết</th><th>Người nhận được gì</th></tr></thead>
+        <tbody>
+          <tr><td>Hoa hồng cài áo hoặc dây cột tóc</td><td>Satin, làm tay từng bông, nhiều màu</td><td>Cài áo đi làm, đi tiệc, buộc tóc hằng ngày</td></tr>
+          <tr><td>Thiệp có ô Dear / From</td><td>Thiệp mẫu chung, hoặc thiệp in logo, lời chúc, mã voucher của chị (từ 50 bộ)</td><td>Một lời chúc có tên mình, kèm ưu đãi để quay lại</td></tr>
+          <tr><td>Túi kiếng</td><td>Hoa gắn sẵn lên thiệp, đóng túi từng bộ</td><td>Nhận là trao được ngay</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Đặt thế nào</h3>
+    <ol class="steps">
+      <li>Chị chọn số bộ và loại hoa ở phần đặt hàng cuối trang, xem ngay số tiền.</li>
+      <li>Bấm nút đặt, điền thông tin, quét QR công ty để thanh toán.</li>
+      <li>Đơn từ 50 bộ: chị gửi logo, lời chúc, nội dung voucher qua Zalo.</li>
+      <li>LỤA LÀ gửi bản thiết kế thiệp để chị duyệt trước khi in.</li>
+      <li>Nhận hàng đã đóng túi từng bộ, kèm hoá đơn VAT.</li>
+    </ol>
+    <p class="note">Thiệp hoa voucher không phải hoa tươi, không phải lụa tơ tằm, và logo được in trên <strong>thiệp</strong>, không in lên hoa.</p>
+  </section>
+
+  <!-- Bước 6: Lợi ích -->
+  <section>
+    <p class="eyebrow">Vì sao một bông hoa giữ được khách</p>
+    <h2>Mỗi lần khách cài hoa, tên chị lại có mặt</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Cấu tạo</th><th>Tính năng</th><th>Lợi ích cho chị</th></tr></thead>
+        <tbody>
+          <tr><td>Satin cuộn tay nhiều lớp</td><td>Không héo, không rụng cánh</td><td>Quà dùng được nhiều tháng, voucher đi theo khách lâu hơn tờ rơi</td></tr>
+          <tr><td>Thiệp in logo + mã voucher</td><td>Mỗi đối tác một mã riêng (từ 100 bộ)</td><td>Biết khách đến từ đối tác nào, đối tác nào kéo khách tốt</td></tr>
+          <tr><td>Hai kiểu: hoa cài và dây cột tóc</td><td>Hợp nhiều lứa tuổi</td><td>Một món tặng được cả khách trẻ, khách lớn tuổi, nhân viên</td></tr>
+          <tr><td>Giá từ 20.000đ/bộ</td><td>Đặt số lượng lớn không đau ví</td><td>Phát quà được cho nhiều người, đặt lại theo từng đợt</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Chị đưa voucher dưới dạng một món quà, và khách thấy chị chu đáo khi nhận nó.</p>
+  </section>
+
+  <!-- Ảnh hàng thật -->
+  <section>
+    <p class="eyebrow">Hàng thật</p>
+    <h2>Ảnh chụp sản phẩm đang bán</h2>
+    <div class="gal">
+      <figure><img src="img/a2.jpg" alt="Hoa cài satin nhiều màu trên thiệp bó hoa nơ hồng" loading="lazy"><figcaption>Hoa cài nhiều màu</figcaption></figure>
+      <figure><img src="img/a3.jpg" alt="Dây cột tóc satin nhiều màu trên thiệp cành hồng" loading="lazy"><figcaption>Dây cột tóc nhiều màu</figcaption></figure>
+      <figure><img src="img/a4.jpg" alt="Bộ quà hoa cài màu be đã đóng túi" loading="lazy"><figcaption>Đóng túi từng bộ, sẵn để trao</figcaption></figure>
+      <figure class="wide"><img src="img/a5.jpg" alt="Đóng gói hàng trăm bộ hoa bằng tay" loading="lazy"><figcaption>Đóng gói từng bộ bằng tay</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- Bước 4: Uy tín -->
+  <section>
+    <p class="eyebrow">Ai đứng sau LỤA LÀ</p>
+    <h2>Người làm quà là người hiểu chuyện kinh doanh</h2>
+    <div class="gold-lines">
+      <p><strong>Vân Lụa Là</strong> (Lê Thị Thu Vân), Founder Công ty Thời trang Lụa Là, CEO Công ty TNHH VAN-SILK, 9 năm làm nghề lụa tại TP.HCM.</p>
+      <p>Đã đồng hành cùng <strong>hơn 65 chủ doanh nghiệp</strong> xây sản phẩm phễu để kéo khách.</p>
+      <p>Hoa do <strong>8 chị phụ nữ có hoàn cảnh khó khăn</strong> làm thủ công từng bông.</p>
+      <p>Đặt hàng với công ty nên doanh nghiệp được <strong>xuất hoá đơn VAT</strong> đầy đủ.</p>
+      <p>Có địa chỉ, có Zalo để gọi hỏi bất cứ lúc nào trước và sau khi đặt.</p>
+    </div>
+  </section>
+
+  <!-- Bước 5: Seeding -->
+  <section>
+    <p class="eyebrow">Vì sao có bông hoa này</p>
+    <h2>Gửi những người phụ nữ lo cho mọi người rồi quên mất mình</h2>
+    <div class="stack">
+      <p>Có một ngày 29 tháng 8, Vân đi trong nước mắt. Lúc đó Vân làm <strong>16 tiếng một ngày</strong>, làm tới mức thấy cuộc sống này vô vị. Chồng Vân nói một câu mà Vân nhớ mãi:</p>
+      <div class="letter"><blockquote>“Em coi lại em đi. Em làm vợ như vậy đã được chưa? Em làm mẹ như vậy đã được chưa? Con em nó không cần em. Em kiếm tiền làm gì vậy em? Mình có nhiều tiền để làm gì vậy em?”</blockquote></div>
+      <p>Một năm sau, Vân không còn gánh một mình. Vân có <strong>52 người</strong> cùng làm. Trong đó có 8 chị làm hoa, những người phụ nữ cũng đang gồng gánh gia đình. Mỗi bộ chị đặt là thêm một phần thu nhập cho các chị ấy.</p>
+    </div>
+    <div class="todo"><b>[CHƯA RÕ – Sếp bổ sung]</b> Một câu chuyện ngắn về 8 chị làm hoa: các chị là ai, làm hoa từ khi nào, có cho nêu tên hoặc ảnh không. Em không tự viết phần này.</div>
+    <div class="stack">
+      <h3>Thử hình dung một tiệm tóc</h3>
+      <p>Chủ tiệm tóc có quán cà phê quen ngay đầu hẻm, khách hai bên phần lớn là nữ. Chị đặt 100 bộ, thiệp in logo tiệm và mã giảm giá lần cắt đầu tiên. Quán cà phê tặng hoa cho khách nữ vào thứ Sáu. Ai cầm thiệp tới tiệm, chị biết ngay khách đó từ quán nào đến.</p>
+      <p class="note">Ví dụ minh hoạ để chị hình dung cách dùng, không phải lời kể của một khách hàng cụ thể.</p>
+    </div>
+  </section>
+
+  <!-- Bước 7: Giá trị lớn -->
+  <section>
+    <p class="eyebrow">Làm một phép tính với số của chị</p>
+    <h2>Cần bao nhiêu khách quay lại thì hoà vốn?</h2>
+    <p>Chị điền số của doanh nghiệp mình. Ô kết quả tự tính.</p>
+    <div class="calc" id="calc">
+      <div class="row">
+        <label for="c-qty">Số bộ định tặng<input id="c-qty" type="number" inputmode="numeric" min="1" value="100"></label>
+        <label for="c-bill">Một khách chi trung bình (đồng)<input id="c-bill" type="number" inputmode="numeric" min="0" step="10000" value="300000"></label>
+        <label for="c-rate">Bao nhiêu % khách quay lại<input id="c-rate" type="number" inputmode="decimal" min="0" max="100" value="5"></label>
+      </div>
+      <div class="result" aria-live="polite">
+        <span>Tiền quà: <strong id="r-cost">2.500.000đ</strong></span>
+        <span>Số khách quay lại: <strong id="r-back">5</strong></span>
+        <span>Doanh thu mang về</span>
+        <b id="r-rev">1.500.000đ</b>
+        <span class="note" id="r-even">Cần 9 khách quay lại để hoà tiền quà.</span>
+      </div>
+    </div>
+    <p class="note">Số mặc định chỉ để minh hoạ, chị đổi theo số thật của mình. Phép tính chưa tính lần khách quay lại thứ hai, thứ ba.</p>
+  </section>
+
+  <!-- Bước 9: Cảm xúc -->
+  <section>
+    <p class="eyebrow">Ba tháng sau</p>
+    <h2>Hình dung một buổi chiều ở cửa hàng của chị</h2>
+    <p>Một chị khách lạ bước vào, mở túi xách lấy ra tấm thiệp có logo của chị, góc thiệp đã hơi mềm vì được mang theo lâu. Trên ve áo chị ấy là bông hồng satin đỏ đô. Chị ấy nói được bạn tặng ở quán bên kia đường, giữ thiệp từ hồi đó, hôm nay mới ghé.</p>
+    <p>Chị nhìn mã voucher và biết ngay khách đến từ đối tác nào.</p>
+    <div class="gal">
+      <figure><img src="img/a6.jpg" alt="Ba người phụ nữ cầm hoa satin tại hội trường" loading="lazy"><figcaption>Khoảnh khắc nhận hoa tại hội trường</figcaption></figure>
+      <figure><img src="img/a7.jpg" alt="Nhóm bạn chụp ảnh cùng hoa satin tại sự kiện" loading="lazy"><figcaption>Hoa tại một sự kiện kinh doanh</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- Bước 13: Bằng chứng khách -->
+  <section>
+    <p class="eyebrow">Khách đã dùng nói gì</p>
+    <h2>Lời của chủ doanh nghiệp đã đặt</h2>
+    <div class="todo"><b>[CHƯA RÕ – Sếp bổ sung] Lời chứng 1:</b> tên + doanh nghiệp, đặt bao nhiêu bộ, tặng cho ai, sau bao lâu có bao nhiêu khách cầm thiệp quay lại, ảnh hoặc ảnh chụp tin nhắn, đã xin phép nêu tên chưa.</div>
+    <div class="todo"><b>[CHƯA RÕ – Sếp bổ sung] Lời chứng 2:</b> cùng các ý trên. Nếu chưa có khách nào đo được số khách quay lại, em đề xuất dùng lời nhận xét của người nhận hoa ở hội trường (có ảnh phía trên).</div>
+  </section>
+
+  <!-- Bước 11: Xử lý từ chối -->
+  <section>
+    <p class="eyebrow">Những điều chị có thể đang nghĩ</p>
+    <h2>Câu hỏi trước khi đặt</h2>
+    <div>
+      <details open><summary>30.000đ một bộ, khách có thấy quà rẻ không?</summary><p>Nghĩ vậy là đúng, vì quà rẻ dễ thành quà vội. Nhưng người nhận không thấy giá. Họ thấy tấm thiệp có lời chúc, một bông hoa làm tay dùng được nhiều tháng. Ở hội trường trong ảnh phía trên, các chị nhận hoa xong là giơ lên chụp ảnh. Với chị, giá thấp giúp tặng được nhiều người hơn và đặt lại được nhiều đợt. Chị có thể đặt vài bộ cầm lên xem trước.</p></details>
+      <details><summary>Làm sao biết khách quay lại nhờ thiệp hoa?</summary><p>Đây là câu nên hỏi trước khi chi bất kỳ đồng quảng cáo nào. Từ 100 bộ, mỗi đối tác được một mã voucher riêng in trên thiệp. Khách đưa thiệp ra, nhân viên ghi lại mã là chị biết khách đến từ đâu. Sau một đợt, chị đếm được số thiệp quay về và giữ lại đối tác kéo khách tốt nhất.</p></details>
+      <details><summary>Satin có phải lụa tơ tằm không?</summary><p>Không. Hoa và dây cột tóc làm bằng satin: bóng, mềm, giữ dáng hoa tốt. Lụa tơ tằm đắt hơn nhiều và không cần thiết cho một món cài áo, buộc tóc hằng ngày. LỤA LÀ nói rõ chất liệu để chị giới thiệu đúng với khách của mình.</p></details>
+      <details><summary>Tôi không biết thiết kế, có phải tự làm thiệp không?</summary><p>Không cần. Từ 50 bộ, LỤA LÀ thiết kế thiệp miễn phí: chị gửi logo, lời chúc và nội dung ưu đãi qua Zalo, nhận bản thiết kế để duyệt rồi mới in. Chưa có lời chúc thì LỤA LÀ gợi ý vài câu để chị chọn.</p></details>
+      <details><summary>Chọn màu thế nào khi chỉ xem qua ảnh?</summary><p>Ảnh điện thoại luôn lệch màu một chút. Chị ghi màu mong muốn trong đơn, LỤA LÀ gửi ảnh thật qua Zalo để xác nhận trước khi đóng gói. Màu nào hết, LỤA LÀ báo ngay để chị đổi, không tự ý thay.</p></details>
+      <details><summary>Để tôi hỏi lại đối tác đã</summary><p>Nên hỏi. Chị gửi link trang này cho đối tác, phần tính tiền bên dưới đã có sẵn số tiền theo từng mức. Nếu cần một bản thiệp mẫu có logo hai bên để đối tác dễ gật đầu, nhắn Zalo cho LỤA LÀ.</p></details>
+    </div>
+    <a class="btn ghost" href="#dat-qua">Tôi đã rõ, cho tôi xem giá</a>
+  </section>
+
+  <!-- Bước 12: Lý do mua -->
+  <section>
+    <p class="eyebrow">Đặt hôm nay thì chị được gì</p>
+    <h2>Ba lý do để bắt đầu từ một đợt nhỏ</h2>
+    <div class="stack">
+      <p>Về tiền: 100 bộ là 2.500.000đ, thấp hơn ngân sách quảng cáo một tuần của nhiều cửa hàng, và chị đếm được bao nhiêu thiệp quay về.</p>
+      <p>Về cảm xúc: khách nhận một món quà làm tay, có lời chúc, nên nhớ đến chị như một người chu đáo.</p>
+      <p>Về chị: mỗi đợt đặt hoa là thêm thu nhập cho 8 chị phụ nữ đang gồng gánh gia đình.</p>
+    </div>
+  </section>
+
+  <!-- Bước 14: Báo giá 2 bước -->
+  <section id="bang-gia">
+    <p class="eyebrow">Bảng giá đã gồm thuế</p>
+    <h2>Một đợt thiệp hoa voucher gồm những gì</h2>
+    <div class="stack-list">
+      <div><span>Thiết kế thiệp riêng: logo, lời chúc, màu, nội dung voucher</span><span>miễn phí từ 50 bộ</span></div>
+      <div><span>Mã voucher riêng cho từng đối tác</span><span>miễn phí từ 100 bộ</span></div>
+      <div><span>Hoa cài hoặc dây cột tóc satin làm tay</span><span>✓</span></div>
+      <div><span>Thiệp in, gắn hoa sẵn, đóng túi kiếng từng bộ</span><span>✓</span></div>
+      <div><span>Xác nhận màu bằng ảnh thật qua Zalo</span><span>✓</span></div>
+      <div><span>Hoá đơn VAT</span><span>✓</span></div>
+    </div>
+    <div class="todo"><b>[CHƯA RÕ – Sếp bổ sung]</b> Giá thị trường để so sánh: thuê thiết kế một mẫu thiệp thường bao nhiêu, in thiệp số lượng ít bao nhiêu một tấm. Có số thật em mới đặt giá trị cạnh từng dòng, không tự đoán.</div>
+    <div class="ladder">
+      <div class="rung"><b>Từ 1 bộ · thiệp mẫu chung</b><span class="p">30.000đ</span><small>Hợp để mua tặng mẹ, chị em, đồng nghiệp, hoặc đặt vài bộ xem thử.</small></div>
+      <div class="rung"><b>Từ 50 bộ · thiệp thiết kế riêng</b><span class="p">30.000đ</span><small>Miễn phí thiết kế thiệp mang logo, lời chúc và voucher của chị.</small></div>
+      <div class="rung hot"><b>Từ 100 bộ · combo đối tác</b><span class="p">25.000đ</span><small>100 bộ = 2.500.000đ. Thiết kế miễn phí, tặng thêm mã voucher riêng cho từng đối tác.</small></div>
+      <div class="rung"><b>Từ 500 bộ</b><span class="p">20.000đ</span><small>500 bộ = 10.000.000đ. Đủ các quyền lợi của mức 100 bộ.</small></div>
+    </div>
+    <p class="note">Phí giao hàng tính riêng theo khu vực, báo khi xác nhận đơn qua Zalo.</p>
+  </section>
+
+  <!-- Bước 15: Quà tặng -->
+  <section>
+    <p class="eyebrow">Quà cho đơn từ 100 bộ</p>
+    <div class="gift">
+      <h3>Mã voucher riêng cho từng đối tác</h3>
+      <p>Mỗi đối tác chị gửi thiệp đi sẽ có một mã riêng in trên thiệp. Khách cầm thiệp tới, chị biết ngay khách đến từ đâu.</p>
+      <p>Sau mỗi đợt, chị so được đối tác nào kéo khách tốt để đợt sau dồn hoa về đó, khỏi đoán mò.</p>
+      <p class="note">Áp dụng cho đơn từ 100 bộ, LỤA LÀ thiết kế và gửi chị duyệt cùng bản thiệp.</p>
+    </div>
+  </section>
+
+  <!-- Bước tiếp theo của phễu: bộ sưu tập LỤA LÀ -->
+  <section>
+    <p class="eyebrow">Bộ sưu tập LỤA LÀ</p>
+    <h2>Khi chị cần một món quà lớn hơn</h2>
+    <p>Ngoài Thiệp Hoa Thắm Tình, LỤA LÀ còn những bộ quà để chị tặng khách thân, đối tác, nhân viên, hay chính mẹ và con gái mình.</p>
+    <div class="coll">
+      <div><b>Thiệp Hoa Thắm Tình</b><span>Hoa cài hoặc dây cột tóc gắn trên thiệp mang lời chúc, logo và voucher của chị.</span><span class="price">Từ 20.000đ/bộ</span></div>
+      <div><b>Nâng Niu Mái Tóc Việt</b><span>Set dây cột tóc lụa.</span><span class="price">Giá: nhắn Zalo</span></div>
+      <div><b>Thanh Lịch và Sang Trọng</b><span>Hộp hoa gài áo.</span><span class="price">Giá: nhắn Zalo</span></div>
+      <div><b>Set Yêu Thương</b><span>Cho cả mẹ và bé: bờm tóc, 5 dây cột tóc, 2 hoa gài áo, 1 dây cột eo.</span><span class="price">Giá: nhắn Zalo</span></div>
+      <div><b>Khăn lụa Văn Hoá Việt</b><span>Khăn lụa mang hoạ tiết văn hoá, lịch sử đất nước Việt Nam.</span><span class="price">Giá: nhắn Zalo</span></div>
+      <div><b>Set Tình Tang</b><span>Khăn lụa, dây cột tóc, bờm cài và thiệp hoa.</span><span class="price">Giá: nhắn Zalo</span></div>
+    </div>
+    <div class="todo"><b>[CHƯA RÕ – Sếp bổ sung]</b> Giá từng set · số món trong set Nâng Niu Mái Tóc Việt và hộp hoa gài áo · dây cột tóc, bờm trong các set là lụa tơ tằm hay satin · ảnh từng set. Có đủ, em làm cho mỗi set một trang riêng.</div>
+    <p>Chị muốn xem ảnh và giá các set, nhắn Zalo <strong>0879 707 007</strong> tên set chị quan tâm.</p>
+  </section>
+
+  <!-- Bước 16: Giới hạn -->
+  <section>
+    <p class="eyebrow">Vì sao phải đặt sớm</p>
+    <h2>Hoa làm tay nên mỗi tuần có hạn</h2>
+    <p>Mỗi bông hoa do 8 chị cuộn tay, mỗi tuần chỉ làm được một số lượng nhất định. Đơn đặt trước được xếp lịch làm trước. Đơn có thiết kế thiệp riêng cần thêm một vòng duyệt mẫu và thời gian in.</p>
+    <div class="todo"><b>[CHƯA RÕ – Sếp bổ sung · đề xuất chờ Sếp duyệt]</b> Một tuần các chị làm được khoảng bao nhiêu bộ, và đơn có thiết kế riêng cần đặt trước mấy ngày. Có số này em sẽ ghi rõ "mỗi tuần nhận tối đa ... bộ" và hạn đặt cho từng đợt.</div>
+  </section>
+
+  <!-- Bước 18 + 17: Đặt hàng & cam kết -->
+  <section id="dat-qua" aria-labelledby="dq-title">
+    <p class="eyebrow">Đặt hàng</p>
+    <h2 id="dq-title">Tính tiền và đặt thiệp hoa</h2>
+    <p class="note">Tính thử ở đây. Thông tin nhận hàng chị điền một lần ở trang đặt hàng.</p>
+    <label for="qty">Số bộ
+      <span class="qty">
+        <button type="button" id="minus" aria-label="Bớt 10 bộ">−</button>
+        <input id="qty" type="number" inputmode="numeric" min="1" value="100">
+        <button type="button" id="plus" aria-label="Thêm 10 bộ">+</button>
+      </span>
+    </label>
+    <div class="bill" aria-live="polite">
+      <div><span id="b-line">100 bộ × 25.000đ</span><span id="b-sub">2.500.000đ</span></div>
+      <div class="note"><span>Đã gồm VAT 8%</span><span id="b-vat">185.185đ</span></div>
+      <div class="note"><span>Phí giao hàng</span><span>Báo qua Zalo</span></div>
+      <div class="total"><span>Tạm tính</span><span id="b-total">2.500.000đ</span></div>
+    </div>
+    <p class="perk" id="perk">Mức 100 bộ: miễn phí thiết kế thiệp + mã voucher riêng cho từng đối tác.</p>
+    <a class="btn" id="pay" href="https://docs.google.com/forms/d/e/1FAIpQLScgF6wTiz9x0p-98Aed_trJTKq6yTi8exI3DGeR5mdZ2jjXxg/viewform" target="_blank" rel="noopener">TÔI MUỐN ĐẶT &amp; NHẬN BẢN THIẾT KẾ THIỆP</a>
+    <span class="micro">Mở trang đặt hàng của Công ty TNHH VAN-SILK: điền thông tin, quét QR, gửi là xong. Muốn hỏi trước? Zalo <strong>0879 707 007</strong>.</span>
+    <div class="guarantee">
+      <div class="seal">CAM<br>KẾT<br>HOA<br>LÀNH</div>
+      <p><strong>Cam kết Bông Hoa Nguyên Vẹn:</strong> hoa bung chỉ, móp dáng hoặc sai màu đã xác nhận, chị chụp ảnh gửi Zalo trong 48 giờ sau khi nhận, LỤA LÀ gửi bộ mới thay và chịu phí giao. Không cần gửi trả hàng cũ.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span class="logo"><img src="img/logo.png" alt="Logo Công ty TNHH VAN-SILK" width="200" height="285"></span>
+    <span><strong>LỤA LÀ</strong> · quà tặng satin cá nhân hoá</span>
+    <span>Xuất hoá đơn: Công ty TNHH VAN-SILK · 606/32/8/13 Quốc lộ 13, Khu phố 17, Phường Hiệp Bình, TP. Hồ Chí Minh</span>
+    <span>Zalo 0879 707 007</span>
+  </footer>
+</div>
+
+<div class="sticky"><a class="btn" href="#dat-qua">TÔI MUỐN XEM GIÁ · TỪ 20.000đ/BỘ</a></div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var fmt=function(n){return Math.round(n).toLocaleString('vi-VN')+'đ'};
+  function unit(q){return q>=500?20000:q>=100?25000:30000}
+  function perk(q){
+    if(q>=500) return 'Mức từ 500 bộ: 20.000đ/bộ, miễn phí thiết kế thiệp + mã voucher riêng cho từng đối tác.';
+    if(q>=100) return 'Mức 100 bộ: miễn phí thiết kế thiệp + mã voucher riêng cho từng đối tác.';
+    if(q>=50) return 'Mức 50 bộ: miễn phí thiết kế thiệp mang logo, lời chúc, voucher của chị. Đặt thêm '+(100-q)+' bộ để xuống 25.000đ/bộ.';
+    return 'Thiệp mẫu chung. Đặt thêm '+(50-q)+' bộ để được thiết kế thiệp riêng miễn phí.';
+  }
+  var qty=$('qty');
+  function bill(){
+    var q=Math.max(1,parseInt(qty.value,10)||1),u=unit(q),t=u*q;
+    $('b-line').textContent=q+' bộ × '+fmt(u);
+    $('b-sub').textContent=fmt(t);
+    $('b-vat').textContent=fmt(t-t/1.08);
+    $('b-total').textContent=fmt(t);
+    $('perk').textContent=perk(q);
+  }
+  $('minus').onclick=function(){qty.value=Math.max(1,(parseInt(qty.value,10)||1)-10);bill()};
+  $('plus').onclick=function(){qty.value=(parseInt(qty.value,10)||0)+10;bill()};
+  qty.addEventListener('input',bill);
+  bill();
+
+  function calc(){
+    var q=Math.max(1,parseInt($('c-qty').value,10)||1);
+    var b=Math.max(0,parseFloat($('c-bill').value)||0);
+    var r=Math.min(100,Math.max(0,parseFloat($('c-rate').value)||0));
+    var cost=unit(q)*q, back=Math.round(q*r/100), rev=back*b;
+    $('r-cost').textContent=fmt(cost);
+    $('r-back').textContent=back;
+    $('r-rev').textContent=fmt(rev);
+    $('r-even').textContent=b>0?('Cần '+Math.ceil(cost/b)+' khách quay lại để hoà tiền quà.'):'Điền số tiền một khách chi để xem điểm hoà vốn.';
+  }
+  ['c-qty','c-bill','c-rate'].forEach(function(id){$(id).addEventListener('input',calc)});
+  calc();
+})();
+</script>
+</body>
+</html>
