@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>VANSILK – Tiền gia công</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+  :root { --nen:#f6f1ea; --the:#ffffff; --chu:#2b2420; --phu:#8a7d72; --vien:#e6dcd0; --chinh:#8c2f39; --chinh-dam:#6f222b; --loi:#b3261e; --xanh:#2f6b4f; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--nen); font-family:"Be Vietnam Pro", system-ui, sans-serif; color:var(--chu); font-size:14px; }
+  button, input, select { font:inherit; }
+  .an { display:none !important; }
+  header { position:sticky; top:0; z-index:5; background:var(--the); border-bottom:1px solid var(--vien); padding:10px 16px; display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between; }
+  .logo { font-family:"Playfair Display", serif; font-size:22px; letter-spacing:3px; color:var(--chinh); text-decoration:none; }
+  .hang { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .nut { border:0; border-radius:10px; padding:9px 14px; background:var(--chinh); color:#fff; font-weight:600; cursor:pointer; min-height:40px; text-decoration:none; display:inline-flex; align-items:center; }
+  .nut:hover { background:var(--chinh-dam); }
+  .nut.phu { background:transparent; color:var(--chinh); border:1px solid var(--vien); }
+  .nut:disabled { opacity:.5; cursor:not-allowed; }
+  main { max-width:1000px; margin:0 auto; padding:16px; display:grid; gap:16px; }
+  h1 { font-size:22px; margin:0; }
+  h2 { font-size:16px; margin:0 0 8px; }
+  .loc { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  select, input { padding:9px 12px; border:1px solid var(--vien); border-radius:10px; background:#fff; color:var(--chu); }
+  .tom { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+  .o { background:var(--the); border:1px solid var(--vien); border-radius:12px; padding:12px 14px; display:grid; gap:2px; }
+  .o span { color:var(--phu); font-size:12px; }
+  .o b { font-size:20px; font-variant-numeric:tabular-nums; }
+  .o.do b { color:var(--loi); } .o.xanh b { color:var(--xanh); }
+  .the { background:var(--the); border:1px solid var(--vien); border-radius:12px; overflow:hidden; }
+  .vt { width:100%; border:0; background:none; text-align:left; padding:12px 14px; display:grid; grid-template-columns:1fr auto; gap:4px 12px; cursor:pointer; color:inherit; }
+  .vt .ten { font-weight:700; font-size:15px; }
+  .vt .phu { color:var(--phu); font-size:12px; grid-column:1/-1; }
+  .vt .no { font-weight:700; color:var(--loi); font-variant-numeric:tabular-nums; }
+  .vt .no.het { color:var(--xanh); }
+  .chitiet { border-top:1px solid var(--vien); padding:8px 14px 14px; display:grid; gap:8px; }
+  .bangct { width:100%; border-collapse:collapse; font-size:13px; }
+  .bangct th, .bangct td { padding:7px 8px; border-bottom:1px solid var(--vien); text-align:left; vertical-align:top; }
+  .bangct th { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--phu); }
+  .bangct td.so { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .cuon { overflow-x:auto; }
+  .datra { color:var(--xanh); font-weight:600; }
+  .themvt { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; }
+  .dsvt { list-style:none; padding:0; margin:0; display:grid; gap:6px; }
+  .dsvt li { display:flex; justify-content:space-between; gap:8px; align-items:center; background:var(--the); border:1px solid var(--vien); border-radius:10px; padding:8px 12px; }
+  .ghichu { color:var(--phu); font-size:12px; }
+  .bao { position:fixed; left:50%; bottom:16px; transform:translateX(-50%); background:var(--chu); color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; }
+  .thu { background:#fff4d6; border-bottom:1px solid #e9c46a; padding:8px 16px; font-size:13px; }
+  .loi { color:var(--loi); }
+</style>
+</head>
+<body>
+  <div id="thanhThu" class="thu an">Đang xem <b>bản chạy thử</b> với dữ liệu mẫu, không lưu vào hệ thống.</div>
+  <header>
+    <div class="hang"><a class="logo" href="/">VANSILK</a><span class="ghichu" id="toi"></span></div>
+    <div class="hang">
+      <a class="nut phu" id="linkBang" href="/don-hang/">Bảng đơn hàng</a>
+    </div>
+  </header>
+  <main>
+    <h1>Tiền gia công vệ tinh</h1>
+    <p class="ghichu">Tiền = số cái QC đạt × đơn giá một cái. Giao hàng và ghi số đạt ở thẻ đơn trên bảng đơn hàng (mục "Giao vệ tinh").</p>
+    <div class="loc">
+      <select id="lThang"></select>
+      <select id="lTrangThai">
+        <option value="chua">Chưa trả tiền</option>
+        <option value="da">Đã trả tiền</option>
+        <option value="tat">Tất cả</option>
+      </select>
+    </div>
+    <div class="tom" id="tom"></div>
+    <div id="dsTien" style="display:grid;gap:10px"></div>
+    <p class="loi" id="loiChung"></p>
+
+    <section>
+      <h2>Danh sách vệ tinh</h2>
+      <div class="themvt">
+        <input id="vTen" placeholder="Tên vệ tinh / tổ may">
+        <input id="vSdt" placeholder="Số điện thoại" inputmode="tel">
+        <input id="vDiaChi" placeholder="Địa chỉ">
+        <button class="nut" type="button" id="vThem">+ Thêm vệ tinh</button>
+      </div>
+      <ul class="dsvt" id="dsVT" style="margin-top:10px"></ul>
+    </section>
+  </main>
+
+<script>
+(function () {
+  const SUPABASE_URL = "https://vulszpepubwjgjfxqbed.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_ov_B2wedxoZymZQ-j7DKxA_LOkRqXxl"; // khoá công khai, an toàn khi bảng đã bật RLS
+  const $ = (id) => document.getElementById(id);
+  const CHAY_THU = new URLSearchParams(location.search).has("thu");
+  const tien = (n) => Math.round(n || 0).toLocaleString("vi-VN") + "đ";
+  const ngayVN = (s) => s ? s.split("-").reverse().join("/") : "";
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function bao(msg) { const el = document.createElement("div"); el.className = "bao"; el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); }
+
+  function dbThat() {
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const tra = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
+    return {
+      async phien() { const { data } = await sb.auth.getSession(); return data.session; },
+      async toi(uid) { return tra(await sb.from("nhan_vien").select("id, ho_ten, vai_tro, trang_thai").eq("id", uid).maybeSingle()); },
+      async dsVeTinh() { return tra(await sb.from("ve_tinh").select("*").order("ten")) || []; },
+      async taoVeTinh(r) { return tra(await sb.from("ve_tinh").insert(r).select().single()); },
+      async suaVeTinh(id, p) { return tra(await sb.from("ve_tinh").update(p).eq("id", id).select().single()); },
+      async dsGiaoMay() { return tra(await sb.from("giao_may").select("*").order("ngay_giao")) || []; },
+      async suaGiaoMay(id, p) { return tra(await sb.from("giao_may").update(p).eq("id", id).select().single()); },
+      async dsDon() { return tra(await sb.from("don_hang").select("id, ma_don, ten_khach, san_pham")) || []; }
+    };
+  }
+  function dbThu() {
+    const vt = [{ id: "v1", ten: "Vệ tinh chị Tuyết", sdt: "", dia_chi: "", dang_lam: true }, { id: "v2", ten: "Vệ tinh anh Hùng", sdt: "", dia_chi: "", dang_lam: true }];
+    const homNay = new Date().toISOString().slice(0, 10);
+    const gm = [
+      { id: "g1", don_id: "d5", ve_tinh_id: "v1", so_luong_giao: 80, don_gia: 28000, ngay_giao: homNay, so_luong_tra: 50, so_dat: 48, so_loi: 2, thanh_tien: 1344000, da_thanh_toan: false },
+      { id: "g2", don_id: "d5", ve_tinh_id: "v2", so_luong_giao: 70, don_gia: 28000, ngay_giao: homNay, so_luong_tra: 70, so_dat: 70, so_loi: 0, thanh_tien: 1960000, da_thanh_toan: false },
+      { id: "g3", don_id: "d6", ve_tinh_id: "v1", so_luong_giao: 100, don_gia: 32000, ngay_giao: homNay, so_luong_tra: 100, so_dat: 98, so_loi: 2, thanh_tien: 3136000, da_thanh_toan: true, ngay_thanh_toan: homNay }
+    ];
+    const don = [{ id: "d5", ma_don: "DH-005", ten_khach: "Shop mẫu E", san_pham: "Đầm suông" }, { id: "d6", ma_don: "DH-006", ten_khach: "Shop mẫu F", san_pham: "Đầm lụa xoè" }];
+    const doi = (o) => JSON.parse(JSON.stringify(o));
+    return {
+      async phien() { return { user: { id: "u1" } }; },
+      async toi() { return { id: "u1", ho_ten: "Lê Thị Thu Vân", vai_tro: "admin", trang_thai: "dang_lam" }; },
+      async dsVeTinh() { return doi(vt); },
+      async taoVeTinh(r) { const x = Object.assign({ id: "v" + (vt.length + 1), dang_lam: true }, r); vt.push(x); return doi(x); },
+      async suaVeTinh(id, p) { const x = vt.find((v) => v.id === id); Object.assign(x, p); return doi(x); },
+      async dsGiaoMay() { return doi(gm); },
+      async suaGiaoMay(id, p) { const x = gm.find((g) => g.id === id); Object.assign(x, p); x.ngay_thanh_toan = x.da_thanh_toan ? (x.ngay_thanh_toan || homNay) : null; return doi(x); },
+      async dsDon() { return doi(don); }
+    };
+  }
+  const db = CHAY_THU ? dbThu() : dbThat();
+
+  let toi = null, veTinh = [], giaoMay = [], don = [], mo = new Set();
+  const laQuanLy = () => toi && (toi.vai_tro === "admin" || toi.vai_tro === "quan_ly");
+  const maDon = (id) => { const d = don.find((x) => x.id === id); return d ? d.ma_don + " · " + d.ten_khach + (d.san_pham ? " · " + d.san_pham : "") : "?"; };
+
+  function dienThang() {
+    const s = new Set(giaoMay.map((g) => (g.ngay_giao || "").slice(0, 7)).filter(Boolean));
+    const nay = new Date().toISOString().slice(0, 7); s.add(nay);
+    const ds = [...s].sort().reverse();
+    $("lThang").innerHTML = '<option value="">Mọi tháng</option>' + ds.map((m) => `<option value="${m}">Giao tháng ${m.slice(5)}/${m.slice(0, 4)}</option>`).join("");
+  }
+
+  function locGM() {
+    const th = $("lThang").value, tt = $("lTrangThai").value;
+    return giaoMay.filter((g) => (!th || (g.ngay_giao || "").startsWith(th)) &&
+      (tt === "tat" || (tt === "da" ? g.da_thanh_toan : !g.da_thanh_toan)));
+  }
+
+  function ve() {
+    const ds = locGM();
+    const chuaTra = ds.filter((g) => !g.da_thanh_toan).reduce((s, g) => s + g.thanh_tien, 0);
+    const daTra = ds.filter((g) => g.da_thanh_toan).reduce((s, g) => s + g.thanh_tien, 0);
+    const dangOVeTinh = ds.reduce((s, g) => s + (g.so_luong_giao - g.so_dat - g.so_loi), 0);
+    $("tom").innerHTML =
+      `<div class="o do"><span>Còn phải trả</span><b>${tien(chuaTra)}</b></div>` +
+      `<div class="o xanh"><span>Đã trả</span><b>${tien(daTra)}</b></div>` +
+      `<div class="o"><span>Cái QC đạt</span><b>${ds.reduce((s, g) => s + g.so_dat, 0)}</b></div>` +
+      `<div class="o"><span>Cái còn ở vệ tinh</span><b>${dangOVeTinh}</b></div>`;
+
+    const theoVT = {};
+    ds.forEach((g) => { (theoVT[g.ve_tinh_id] = theoVT[g.ve_tinh_id] || []).push(g); });
+    const khoi = $("dsTien"); khoi.innerHTML = "";
+    const ids = Object.keys(theoVT);
+    if (!ids.length) { khoi.innerHTML = '<p class="ghichu">Không có dòng giao nào trong bộ lọc này.</p>'; }
+    ids.sort((a, b) => sumNo(theoVT[b]) - sumNo(theoVT[a])).forEach((id) => {
+      const rows = theoVT[id], v = veTinh.find((x) => x.id === id) || { ten: "?" };
+      const no = sumNo(rows), dat = rows.reduce((s, g) => s + g.so_dat, 0), giao = rows.reduce((s, g) => s + g.so_luong_giao, 0);
+      const el = document.createElement("div"); el.className = "the";
+      el.innerHTML =
+        `<button class="vt" type="button"><span class="ten">${esc(v.ten)}</span><span class="no ${no ? "" : "het"}">${no ? "Còn nợ " + tien(no) : "Đã trả hết"}</span>` +
+        `<span class="phu">${rows.length} lần giao · giao ${giao} · đạt ${dat} · tổng tiền ${tien(rows.reduce((s, g) => s + g.thanh_tien, 0))}${v.sdt ? " · " + esc(v.sdt) : ""}</span></button>` +
+        `<div class="chitiet ${mo.has(id) ? "" : "an"}"><div class="cuon"><table class="bangct"><thead><tr><th>Đơn</th><th>Ngày giao</th><th>Giao</th><th>Đạt</th><th>Lỗi</th><th>Đơn giá</th><th>Tiền</th><th>Đã trả</th></tr></thead><tbody>` +
+        rows.map((g) => `<tr><td>${esc(maDon(g.don_id))}</td><td>${ngayVN(g.ngay_giao)}</td><td class="so">${g.so_luong_giao}</td><td class="so">${g.so_dat}</td><td class="so">${g.so_loi}</td><td class="so">${tien(g.don_gia)}</td><td class="so">${tien(g.thanh_tien)}</td>` +
+          `<td><label><input type="checkbox" data-tra="${g.id}" ${g.da_thanh_toan ? "checked" : ""} ${laQuanLy() ? "" : "disabled"}> ${g.da_thanh_toan ? '<span class="datra">' + ngayVN(g.ngay_thanh_toan) + "</span>" : ""}</label></td></tr>`).join("") +
+        `</tbody></table></div>` +
+        (laQuanLy() && no ? `<button class="nut" type="button" data-trahet="${id}">Đánh dấu đã trả hết ${tien(no)}</button>` : "") +
+        (laQuanLy() ? "" : '<p class="ghichu">Chỉ Quản lý mới đánh dấu đã trả tiền.</p>') + `</div>`;
+      el.querySelector(".vt").addEventListener("click", () => { mo.has(id) ? mo.delete(id) : mo.add(id); ve(); });
+      el.querySelectorAll("[data-tra]").forEach((cb) => cb.addEventListener("change", () => danhDau([cb.dataset.tra], cb.checked)));
+      const th = el.querySelector("[data-trahet]");
+      if (th) th.addEventListener("click", () => {
+        if (confirm(`Đánh dấu đã trả ${tien(no)} cho ${v.ten}?`)) danhDau(rows.filter((g) => !g.da_thanh_toan && g.thanh_tien > 0).map((g) => g.id), true);
+      });
+      khoi.appendChild(el);
+    });
+    veDsVT();
+  }
+  const sumNo = (rows) => rows.filter((g) => !g.da_thanh_toan).reduce((s, g) => s + g.thanh_tien, 0);
+
+  async function danhDau(ids, gt) {
+    $("loiChung").textContent = "";
+    try {
+      for (const id of ids) { const r = await db.suaGiaoMay(id, { da_thanh_toan: gt }); giaoMay = giaoMay.map((g) => (g.id === r.id ? r : g)); }
+      bao(gt ? "Đã đánh dấu trả tiền" : "Đã bỏ đánh dấu"); ve();
+    } catch (e) { $("loiChung").textContent = e.message; ve(); }
+  }
+
+  function veDsVT() {
+    $("dsVT").innerHTML = veTinh.map((v) => `<li><span><b>${esc(v.ten)}</b>${v.sdt ? " · " + esc(v.sdt) : ""}${v.dia_chi ? " · " + esc(v.dia_chi) : ""}</span>` +
+      `<label class="ghichu"><input type="checkbox" data-vt="${v.id}" ${v.dang_lam !== false ? "checked" : ""}> đang nhận hàng</label></li>`).join("") || '<li class="ghichu">Chưa có vệ tinh nào.</li>';
+    $("dsVT").querySelectorAll("[data-vt]").forEach((cb) => cb.addEventListener("change", async () => {
+      try { const r = await db.suaVeTinh(cb.dataset.vt, { dang_lam: cb.checked }); veTinh = veTinh.map((v) => (v.id === r.id ? r : v)); bao("Đã lưu"); }
+      catch (e) { $("loiChung").textContent = e.message; }
+    }));
+  }
+
+  $("vThem").addEventListener("click", async () => {
+    const ten = $("vTen").value.trim(); if (!ten) { $("vTen").focus(); return; }
+    try {
+      const v = await db.taoVeTinh({ ten, sdt: $("vSdt").value.trim() || null, dia_chi: $("vDiaChi").value.trim() || null });
+      veTinh.push(v); $("vTen").value = $("vSdt").value = $("vDiaChi").value = ""; veDsVT(); bao("Đã thêm " + v.ten);
+    } catch (e) { $("loiChung").textContent = e.message; }
+  });
+  $("lThang").addEventListener("change", ve);
+  $("lTrangThai").addEventListener("change", ve);
+
+  (async function () {
+    $("thanhThu").classList.toggle("an", !CHAY_THU);
+    if (CHAY_THU) $("linkBang").href = "/don-hang/?thu=1";
+    const p = await db.phien(); if (!p) { location.href = "/"; return; }
+    try { toi = await db.toi(p.user.id); } catch (e) { toi = null; }
+    if (!toi || toi.trang_thai !== "dang_lam") { location.href = "/"; return; }
+    $("toi").textContent = toi.ho_ten;
+    try { [veTinh, giaoMay, don] = await Promise.all([db.dsVeTinh(), db.dsGiaoMay(), db.dsDon()]); }
+    catch (e) { $("loiChung").textContent = /does not exist|schema cache/i.test(e.message) ? "Hệ thống chưa có bảng vệ tinh. Cần chạy file 02-ve-tinh-gia-cong.sql trên Supabase một lần." : e.message; }
+    dienThang(); ve();
+  })();
+})();
+</script>
+</body>
+</html>

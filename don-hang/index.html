@@ -69,6 +69,13 @@
   .chuyen { display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#faf5ef; border-radius:12px; padding:10px 12px; }
   .chuyen .giua { font-weight:700; }
   .loi { color:var(--loi); font-size:13px; min-height:18px; }
+  .gmds { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+  .gmds li { border:1px solid var(--vien); border-radius:10px; padding:8px 10px; display:grid; gap:2px; font-size:13px; }
+  .gmds li .tren { display:flex; justify-content:space-between; gap:8px; font-weight:600; }
+  .gmds li .so { color:var(--phu); font-size:12px; }
+  .gmds li button { justify-self:start; border:0; background:none; color:var(--chinh); font-weight:600; padding:4px 0; cursor:pointer; }
+  .gmform { border-top:1px dashed var(--vien); padding-top:10px; display:grid; gap:10px; }
+  .datra { color:var(--xanh); font-weight:600; }
   .ls { list-style:none; margin:0; padding:0; display:grid; gap:4px; font-size:12px; color:var(--phu); max-height:140px; overflow:auto; }
   .cuoi { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
   .ghichu { font-size:12px; color:var(--phu); }
@@ -86,6 +93,7 @@
     </div>
     <div class="hang">
       <button class="nut" id="nutTao" type="button">+ Đơn mới</button>
+      <a class="nut phu" id="linkGiaCong" href="/gia-cong/" style="text-decoration:none;display:inline-flex;align-items:center">Tiền gia công</a>
       <button class="nut phu" id="nutTai" type="button">Tải lại</button>
       <button class="nut phu" id="nutThoat" type="button">Đăng xuất</button>
     </div>
@@ -134,6 +142,30 @@
         <label class="tick"><input type="checkbox" id="kKyThuat"> 🔑 Bảng kỹ thuật đã có, đã ký</label>
         <label class="tick"><input type="checkbox" id="kVai"> 🔑 Vải đã về kho, đã soi, đủ số mét</label>
         <label class="tick"><input type="checkbox" id="kRap"> 🔑 Rập + số đo đã chốt (khách duyệt)</label>
+      </div>
+      <div class="khoi" id="khuGiaoMay">
+        <h4>Giao vệ tinh <span class="ghichu" id="gmTong"></span></h4>
+        <ul class="gmds" id="gmDs"></ul>
+        <div class="gmform an" id="gmForm">
+          <div class="luoi">
+            <label>Vệ tinh<select id="gVeTinh"></select></label>
+            <label>Số cái giao<input id="gGiao" type="number" min="1" inputmode="numeric"></label>
+            <label>Đơn giá / cái (đồng)<input id="gGia" type="number" min="0" step="500" inputmode="numeric"></label>
+            <label>Ngày giao<input id="gNgay" type="date"></label>
+            <label>Hạn trả<input id="gHan" type="date"></label>
+            <label>Số cái đã trả<input id="gTra" type="number" min="0" inputmode="numeric"></label>
+            <label>QC đạt<input id="gDat" type="number" min="0" inputmode="numeric"></label>
+            <label>Lỗi trả sửa<input id="gLoi" type="number" min="0" inputmode="numeric"></label>
+          </div>
+          <label>Ghi chú<input id="gGhiChu" placeholder="VD: may cổ trước, lược eo"></label>
+          <p class="ghichu" id="gTien"></p>
+          <p class="loi" id="gLoiMsg"></p>
+          <div class="cuoi">
+            <button class="nut phu" type="button" id="gHuy">Huỷ</button>
+            <button class="nut" type="button" id="gLuu">Lưu dòng giao</button>
+          </div>
+        </div>
+        <button class="nut phu" type="button" id="gThem">+ Giao cho vệ tinh</button>
       </div>
       <label class="tick" id="khuThu"><input type="checkbox" id="fThuDu"> Tiền đã về đủ</label>
       <div class="khoi" id="khuPhanHoi">
@@ -185,6 +217,11 @@
       async tao(row) { return tra(await sb.from("don_hang").insert(row).select().single()); },
       async sua(id, patch) { return tra(await sb.from("don_hang").update(patch).eq("id", id).select().single()); },
       async lichSu(id) { return tra(await sb.from("don_hang_lich_su").select("*").eq("don_id", id).order("luc", { ascending: false })) || []; },
+      async dsVeTinh() { try { return tra(await sb.from("ve_tinh").select("*").order("ten")) || []; } catch (e) { return []; } },
+      async taoVeTinh(row) { return tra(await sb.from("ve_tinh").insert(row).select().single()); },
+      async dsGiaoMay() { try { return tra(await sb.from("giao_may").select("*").order("ngay_giao")) || []; } catch (e) { return []; } },
+      async taoGiaoMay(row) { return tra(await sb.from("giao_may").insert(row).select().single()); },
+      async suaGiaoMay(id, patch) { return tra(await sb.from("giao_may").update(patch).eq("id", id).select().single()); },
       async thoat() { await sb.auth.signOut(); }
     };
   }
@@ -207,6 +244,16 @@
       mk({ ma_don: "DH-006", ten_khach: "Shop mẫu F", san_pham: "Đầm lụa xoè", so_luong: 100, chang: 11, nguoi_giu: "u2", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, da_thu_du: true, muc_hai_long: "hai_long", phan_hoi: "Form đẹp, khách đặt thêm 50 cái", vao_chang_luc: ngay(1) })
     ];
     const ls = [];
+    const vt = [{ id: "v1", ten: "Vệ tinh chị Tuyết", sdt: "", dang_lam: true }, { id: "v2", ten: "Vệ tinh anh Hùng", sdt: "", dang_lam: true }];
+    const tinhGM = (r) => {
+      if (r.so_dat > r.so_luong_giao) throw new Error("Số đạt không được lớn hơn số giao.");
+      if (r.so_dat + r.so_loi > r.so_luong_tra) throw new Error("Số đạt + số lỗi không được lớn hơn số đã trả.");
+      r.thanh_tien = r.so_dat * r.don_gia; return r;
+    };
+    const gm = [
+      tinhGM({ id: "g1", don_id: "d5", ve_tinh_id: "v1", so_luong_giao: 80, don_gia: 28000, ngay_giao: "2026-11-05", han_tra: "2026-11-12", so_luong_tra: 50, so_dat: 48, so_loi: 2, da_thanh_toan: false }),
+      tinhGM({ id: "g2", don_id: "d5", ve_tinh_id: "v2", so_luong_giao: 70, don_gia: 28000, ngay_giao: "2026-11-05", han_tra: "2026-11-12", so_luong_tra: 0, so_dat: 0, so_loi: 0, da_thanh_toan: false })
+    ];
     const doi = (o) => JSON.parse(JSON.stringify(o));
     function kiemKhoa(cu, moi) {
       if (moi.chang >= CHANG_CAT && (!cu || cu.chang < CHANG_CAT) && !(moi.khoa_ky_thuat && moi.khoa_vai && moi.khoa_rap))
@@ -231,6 +278,11 @@
         Object.assign(cu, moi); return doi(cu);
       },
       async lichSu(idDon) { return doi(ls.filter((x) => x.don_id === idDon).reverse()); },
+      async dsVeTinh() { return doi(vt); },
+      async taoVeTinh(row) { const r = Object.assign({ id: "v" + (vt.length + 1), dang_lam: true }, row); vt.push(r); return doi(r); },
+      async dsGiaoMay() { return doi(gm); },
+      async taoGiaoMay(row) { const r = tinhGM(Object.assign({ id: "g" + (gm.length + 1), so_luong_tra: 0, so_dat: 0, so_loi: 0, da_thanh_toan: false, ngay_giao: new Date().toISOString().slice(0, 10) }, row)); gm.push(r); return doi(r); },
+      async suaGiaoMay(idG, patch) { const r = gm.find((x) => x.id === idG); Object.assign(r, patch); tinhGM(r); return doi(r); },
       async thoat() { location.href = "/"; }
     };
   }
@@ -238,7 +290,9 @@
   const db = CHAY_THU ? dbThu() : dbThat();
 
   // ---------- Trạng thái ----------
-  let toi = null, nhanVien = [], dsDon = [], dangMo = null;
+  let toi = null, nhanVien = [], dsDon = [], dangMo = null, veTinh = [], giaoMay = [], gmDangSua = null;
+  const tien = (n) => Math.round(n || 0).toLocaleString("vi-VN") + "đ";
+  const tenVT = (id) => (veTinh.find((v) => v.id === id) || {}).ten || "?";
   const loc = { cuatoi: false, chamdo: false, xong: false, tim: "" };
   const tenNV = (id) => (nhanVien.find((n) => n.id === id) || {}).ho_ten || "Chưa giao";
   const laQuanLy = () => toi && (toi.vai_tro === "admin" || toi.vai_tro === "quan_ly");
@@ -296,6 +350,9 @@
         const b = document.createElement("button"); b.type = "button";
         b.className = "the " + d.uu_tien + (d.nguoi_giu === toi.id ? " cuatoi" : "");
         const khoa = (c === CHANG_CAT - 1 ? `<span class="khoa">🔑 ${[d.khoa_ky_thuat, d.khoa_vai, d.khoa_rap].filter(Boolean).length}/3</span>` : "") +
+          (() => { const g = giaoMay.filter((x) => x.don_id === d.id); if (!g.length) return "";
+            const giao = g.reduce((s, x) => s + x.so_luong_giao, 0), dat = g.reduce((s, x) => s + x.so_dat, 0);
+            return `<span>🧵 ${g.length} vệ tinh · đạt ${dat}/${giao}</span>`; })() +
           (c >= 10 && !d.da_thu_du ? `<span class="trehan">Chưa thu đủ</span>` : "") +
           (d.muc_hai_long ? `<span>${HAI_LONG[d.muc_hai_long]}</span>` : "");
         b.innerHTML =
@@ -356,13 +413,17 @@
     $("khuThu").classList.toggle("an", moi || c < 9);
     $("khuPhanHoi").classList.toggle("an", moi || c < 10);
     $("khuHoanTat").classList.toggle("an", moi || c < SO_CHANG);
+    $("khuGiaoMay").classList.toggle("an", moi || (c < CHANG_CAT && !giaoMay.some((x) => x.don_id === d.id)));
+    $("gmForm").classList.add("an"); $("gThem").classList.remove("an");
+    if (!moi) veGiaoMay();
     if (!moi) {
       $("fNhay").value = String(c);
       $("nutLui").disabled = !sua || c === 1;
       $("nutTien").disabled = !sua || c === SO_CHANG;
       $("nutTien").textContent = c < SO_CHANG ? "Sang " + CHANG[c + 1].split(" ")[0] + " ▶" : "Chặng cuối";
     }
-    $("formDon").querySelectorAll("input, select, textarea").forEach((el) => { el.disabled = !sua; });
+    // Phần giao vệ tinh: ai đang làm cũng ghi được (điều phối, QC đếm đạt) nên không khoá theo người giữ đơn
+    $("formDon").querySelectorAll("input, select, textarea").forEach((el) => { if (!el.closest("#khuGiaoMay")) el.disabled = !sua; });
     $("fMa").disabled = !moi && !laQuanLy();
     $("nutLuu").classList.toggle("an", !sua);
     $("quyen").textContent = sua ? "" : "Chị đang xem. Chỉ người đang giữ đơn hoặc Quản lý mới sửa được đơn này.";
@@ -376,6 +437,91 @@
       } catch (e) { $("lichSu").innerHTML = "<li>Không tải được</li>"; }
     }
   }
+
+  // ---------- Giao vệ tinh ----------
+  function veGiaoMay() {
+    const g = giaoMay.filter((x) => x.don_id === dangMo.id);
+    const giao = g.reduce((s, x) => s + x.so_luong_giao, 0);
+    const dat = g.reduce((s, x) => s + x.so_dat, 0);
+    const conLai = (dangMo.so_luong || 0) - giao;
+    $("gmTong").textContent = g.length ? `· đã giao ${giao}${dangMo.so_luong ? "/" + dangMo.so_luong : ""} · đạt ${dat} · tiền công ${tien(g.reduce((s, x) => s + x.thanh_tien, 0))}` : "";
+    $("gmDs").innerHTML = g.length ? g.map((x) => {
+      const tre = x.han_tra && x.han_tra < homNay() && x.so_dat + x.so_loi < x.so_luong_giao;
+      return `<li><div class="tren"><span>${esc(tenVT(x.ve_tinh_id))}</span><span>${tien(x.thanh_tien)}${x.da_thanh_toan ? ' · <span class="datra">đã trả</span>' : ""}</span></div>` +
+        `<div class="so">Giao ${x.so_luong_giao} × ${tien(x.don_gia)} · ${ngayVN(x.ngay_giao)}${x.han_tra ? ` · <span class="${tre ? "trehan" : ""}">hạn ${ngayVN(x.han_tra)}</span>` : ""}</div>` +
+        `<div class="so">Đã trả ${x.so_luong_tra} · QC đạt <b>${x.so_dat}</b> · lỗi ${x.so_loi}${x.ghi_chu ? " · " + esc(x.ghi_chu) : ""}</div>` +
+        `<button type="button" data-gm="${x.id}">Ghi hàng trả / sửa</button></li>`;
+    }).join("") : '<li class="so">Chưa giao vệ tinh nào.' + (conLai > 0 ? "" : "") + "</li>";
+    $("gmDs").querySelectorAll("[data-gm]").forEach((b) => b.addEventListener("click", () => moGM(giaoMay.find((x) => x.id === b.dataset.gm))));
+  }
+
+  function dienVeTinh() {
+    $("gVeTinh").innerHTML = veTinh.filter((v) => v.dang_lam !== false).map((v) => `<option value="${v.id}">${esc(v.ten)}</option>`).join("") +
+      '<option value="__moi">＋ Thêm vệ tinh mới…</option>';
+  }
+
+  function moGM(x) {
+    gmDangSua = x || null;
+    dienVeTinh();
+    const daGiao = giaoMay.filter((y) => y.don_id === dangMo.id).reduce((s, y) => s + y.so_luong_giao, 0);
+    $("gVeTinh").value = x ? x.ve_tinh_id : (veTinh[0] ? veTinh[0].id : "__moi");
+    $("gGiao").value = x ? x.so_luong_giao : Math.max(0, (dangMo.so_luong || 0) - daGiao) || "";
+    $("gGia").value = x ? x.don_gia : "";
+    $("gNgay").value = x ? x.ngay_giao : homNay();
+    $("gHan").value = x ? (x.han_tra || "") : "";
+    $("gTra").value = x ? x.so_luong_tra : 0;
+    $("gDat").value = x ? x.so_dat : 0;
+    $("gLoi").value = x ? x.so_loi : 0;
+    $("gGhiChu").value = x ? (x.ghi_chu || "") : "";
+    $("gLoiMsg").textContent = "";
+    const khoaTien = x && x.da_thanh_toan && !laQuanLy();
+    ["gGia", "gDat"].forEach((i) => { $(i).disabled = khoaTien; });
+    tinhTienGM();
+    $("gmForm").classList.remove("an"); $("gThem").classList.add("an");
+    $("gGiao").focus();
+  }
+
+  function tinhTienGM() {
+    const dat = +$("gDat").value || 0, gia = +$("gGia").value || 0;
+    $("gTien").textContent = `Tiền công dòng này: ${dat} cái đạt × ${tien(gia)} = ${tien(dat * gia)}`;
+  }
+
+  async function luuGM() {
+    let vtId = $("gVeTinh").value;
+    const row = {
+      so_luong_giao: parseInt($("gGiao").value, 10), don_gia: parseInt($("gGia").value, 10),
+      ngay_giao: $("gNgay").value || homNay(), han_tra: $("gHan").value || null,
+      so_luong_tra: parseInt($("gTra").value, 10) || 0, so_dat: parseInt($("gDat").value, 10) || 0, so_loi: parseInt($("gLoi").value, 10) || 0,
+      ghi_chu: $("gGhiChu").value.trim() || null
+    };
+    if (!(row.so_luong_giao > 0)) { $("gLoiMsg").textContent = "Nhập số cái giao."; return; }
+    if (!(row.don_gia >= 0) || $("gGia").value === "") { $("gLoiMsg").textContent = "Nhập đơn giá một cái."; return; }
+    if (row.so_dat > row.so_luong_giao) { $("gLoiMsg").textContent = "Số đạt không được lớn hơn số giao."; return; }
+    if (row.so_dat + row.so_loi > row.so_luong_tra) { $("gLoiMsg").textContent = "Số đạt + số lỗi không được lớn hơn số đã trả."; return; }
+    $("gLuu").disabled = true;
+    try {
+      if (vtId === "__moi") {
+        const ten = (prompt("Tên vệ tinh mới:") || "").trim();
+        if (!ten) { $("gLuu").disabled = false; return; }
+        const v = await db.taoVeTinh({ ten }); veTinh.push(v); vtId = v.id;
+      }
+      row.ve_tinh_id = vtId;
+      if (gmDangSua) {
+        if (gmDangSua.da_thanh_toan && !laQuanLy()) { delete row.don_gia; delete row.so_dat; }
+        const r = await db.suaGiaoMay(gmDangSua.id, row); giaoMay = giaoMay.map((y) => (y.id === r.id ? r : y));
+      } else {
+        row.don_id = dangMo.id; const r = await db.taoGiaoMay(row); giaoMay.push(r);
+      }
+      $("gmForm").classList.add("an"); $("gThem").classList.remove("an");
+      veGiaoMay(); ve(); bao("Đã lưu phần giao vệ tinh");
+    } catch (e) { $("gLoiMsg").textContent = loiDe(e); }
+    finally { $("gLuu").disabled = false; }
+  }
+
+  $("gThem").addEventListener("click", () => moGM(null));
+  $("gHuy").addEventListener("click", () => { $("gmForm").classList.add("an"); $("gThem").classList.remove("an"); });
+  $("gLuu").addEventListener("click", luuGM);
+  ["gDat", "gGia"].forEach((i) => $(i).addEventListener("input", tinhTienGM));
 
   function docForm() {
     const sl = $("fSoLuong").value;
@@ -437,12 +583,13 @@
   $("tim").addEventListener("input", (e) => { loc.tim = e.target.value; ve(); });
 
   async function taiLai() {
-    try { [nhanVien, dsDon] = await Promise.all([db.dsNhanVien(), db.dsDon()]); dienChon(); ve(); }
+    try { [nhanVien, dsDon, veTinh, giaoMay] = await Promise.all([db.dsNhanVien(), db.dsDon(), db.dsVeTinh(), db.dsGiaoMay()]); dienChon(); ve(); }
     catch (e) { $("bang").innerHTML = `<div class="giua-trang">${esc(loiDe(e))}</div>`; }
   }
 
   async function batDau() {
     $("thanhThu").classList.toggle("an", !CHAY_THU);
+    if (CHAY_THU) $("linkGiaCong").href = "/gia-cong/?thu=1";
     $("dangTai").classList.remove("an");
     const phien = await db.phien();
     if (!phien) { location.href = "/"; return; }
