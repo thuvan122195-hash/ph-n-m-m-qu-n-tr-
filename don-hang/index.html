@@ -52,6 +52,11 @@
   .chamdo::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--loi); }
   .trehan { color:var(--loi); font-weight:600; }
   .khoa { font-size:12px; }
+  .vtthe { display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+  .vtthe b { font-weight:600; background:#f3ece3; color:var(--chu); border-radius:6px; padding:1px 6px; }
+  .vtthe b.du { background:#e3efe7; color:var(--xanh); }
+  .vtthe b.chon { outline:2px solid var(--chinh); }
+  .locvt { padding:8px 12px; border:1px solid var(--vien); border-radius:99px; background:var(--the); min-height:34px; width:auto; max-width:280px; }
 
   dialog { border:0; border-radius:16px; padding:0; width:min(560px, calc(100vw - 24px)); max-height:calc(100vh - 24px); box-shadow:0 20px 60px rgba(0,0,0,.25); color:var(--chu); }
   dialog::backdrop { background:rgba(40,30,25,.45); }
@@ -111,6 +116,7 @@
     <button class="chip" type="button" data-loc="cuatoi" aria-pressed="false">Đơn tôi giữ</button>
     <button class="chip" type="button" data-loc="chamdo" aria-pressed="false">Chỉ đơn chấm đỏ</button>
     <button class="chip" type="button" data-loc="xong" aria-pressed="false">Hiện đơn đã đóng</button>
+    <select class="locvt" id="locVT" aria-label="Lọc theo vệ tinh"><option value="">Mọi vệ tinh</option></select>
     <input class="tim" id="tim" type="search" placeholder="Tìm mã đơn, khách, sản phẩm">
     <div class="tom" id="tom"></div>
   </div>
@@ -338,7 +344,7 @@
   let toi = null, nhanVien = [], dsDon = [], dangMo = null, veTinh = [], giaoMay = [], gmDangSua = null, qcLan = [];
   const tien = (n) => Math.round(n || 0).toLocaleString("vi-VN") + "đ";
   const tenVT = (id) => { const v = veTinh.find((x) => x.id === id); return v ? (v.ma ? v.ma + " · " : "") + v.ten : "?"; };
-  const loc = { cuatoi: false, chamdo: false, xong: false, tim: "" };
+  const loc = { cuatoi: false, chamdo: false, xong: false, tim: "", vt: "" };
   const tenNV = (id) => (nhanVien.find((n) => n.id === id) || {}).ho_ten || "Chưa giao";
   const laQuanLy = () => toi && (toi.vai_tro === "admin" || toi.vai_tro === "quan_ly");
   const duocSua = (d) => !d || laQuanLy() || d.nguoi_giu === toi.id;
@@ -367,6 +373,7 @@
       if (!loc.xong && d.hoan_tat) return false;
       if (loc.cuatoi && d.nguoi_giu !== toi.id) return false;
       if (loc.chamdo && soNgay(d) <= NGAY_DO) return false;
+      if (loc.vt && !giaoMay.some((x) => x.don_id === d.id && x.ve_tinh_id === loc.vt)) return false;
       if (t && ![d.ma_don, d.ten_khach, d.san_pham].join(" ").toLowerCase().includes(t)) return false;
       return true;
     });
@@ -381,7 +388,14 @@
       `<span class="do">Chấm đỏ <b>${doCount}</b></span>` +
       `<span>Trễ hạn <b>${conChay.filter(treHan).length}</b></span>` +
       `<span>Đã giao chưa thu đủ <b>${conChay.filter((d) => d.chang >= 10 && !d.da_thu_du).length}</b></span>` +
-      `<span>Khiếu nại <b>${conChay.filter((d) => d.muc_hai_long === "khieu_nai").length}</b></span>`;
+      `<span>Khiếu nại <b>${conChay.filter((d) => d.muc_hai_long === "khieu_nai").length}</b></span>` +
+      (loc.vt ? (() => {
+        const g = giaoMay.filter((x) => x.ve_tinh_id === loc.vt);
+        const giu = g.reduce((s, x) => s + x.so_luong_giao - x.so_dat, 0);
+        const no = g.filter((x) => !x.da_thanh_toan).reduce((s, x) => s + x.thanh_tien, 0);
+        const quaHan = g.filter((x) => x.han_tra && x.han_tra < homNay() && x.so_dat < x.so_luong_giao).length;
+        return `<span>· ${esc(tenVT(loc.vt))}: đang giữ <b>${giu}</b> cái · chưa trả <b>${tien(no)}</b>${quaHan ? ` · <span class="trehan">${quaHan} lô quá hạn trả</span>` : ""}</span>`;
+      })() : "");
 
     const bang = $("bang"); bang.innerHTML = "";
     for (let c = 1; c <= SO_CHANG; c++) {
@@ -396,8 +410,12 @@
         b.className = "the " + d.uu_tien + (d.nguoi_giu === toi.id ? " cuatoi" : "");
         const khoa = (c === CHANG_CAT - 1 ? `<span class="khoa">🔑 ${[d.khoa_ky_thuat, d.khoa_vai, d.khoa_rap].filter(Boolean).length}/3</span>` : "") +
           (() => { const g = giaoMay.filter((x) => x.don_id === d.id); if (!g.length) return "";
-            const giao = g.reduce((s, x) => s + x.so_luong_giao, 0), dat = g.reduce((s, x) => s + x.so_dat, 0);
-            return `<span>🧵 ${g.length} vệ tinh · đạt ${dat}/${giao}</span>`; })() +
+            const theoVT = {};
+            g.forEach((x) => { const t = theoVT[x.ve_tinh_id] || (theoVT[x.ve_tinh_id] = { giao: 0, dat: 0 }); t.giao += x.so_luong_giao; t.dat += x.so_dat; });
+            return `<span class="vtthe">🧵 ${Object.entries(theoVT).map(([id, t]) => {
+              const v = veTinh.find((y) => y.id === id) || {};
+              return `<b class="${t.dat >= t.giao ? "du" : ""}${loc.vt === id ? " chon" : ""}" title="${esc(tenVT(id))}">${esc(v.ma || v.ten || "?")} ${t.dat}/${t.giao}</b>`;
+            }).join(" ")}</span>`; })() +
           (c >= 10 && !d.da_thu_du ? `<span class="trehan">Chưa thu đủ</span>` : "") +
           (d.muc_hai_long ? `<span>${HAI_LONG[d.muc_hai_long]}</span>` : "");
         b.innerHTML =
@@ -553,7 +571,7 @@
       qcLan.push(r);
       const g = await db.layGiaoMay(x.id); giaoMay = giaoMay.map((y) => (y.id === g.id ? g : y));
       $("qcForm").classList.add("an"); $("gThem").classList.remove("an");
-      veGiaoMay(); ve(); bao(`Đã ghi lần QC ${r.lan}: đạt ${s.dat}${s.sua ? ", " + s.sua + " cái trả lại sửa" : ""}`);
+      veGiaoMay(); dienLocVT(); ve(); bao(`Đã ghi lần QC ${r.lan}: đạt ${s.dat}${s.sua ? ", " + s.sua + " cái trả lại sửa" : ""}`);
     } catch (e) { $("qLoiMsg").textContent = loiDe(e); }
     finally { $("qLuu").disabled = false; }
   }
@@ -611,7 +629,7 @@
         row.don_id = dangMo.id; const r = await db.taoGiaoMay(row); giaoMay.push(r);
       }
       $("gmForm").classList.add("an"); $("gThem").classList.remove("an");
-      veGiaoMay(); ve(); bao("Đã lưu phần giao vệ tinh");
+      veGiaoMay(); dienLocVT(); ve(); bao("Đã lưu phần giao vệ tinh");
     } catch (e) { $("gLoiMsg").textContent = loiDe(e); }
     finally { $("gLuu").disabled = false; }
   }
@@ -686,9 +704,21 @@
     loc[b.dataset.loc] = !loc[b.dataset.loc]; b.setAttribute("aria-pressed", String(loc[b.dataset.loc])); ve();
   }));
   $("tim").addEventListener("input", (e) => { loc.tim = e.target.value; ve(); });
+  $("locVT").addEventListener("change", (e) => { loc.vt = e.target.value; ve(); });
+  function dienLocVT() {
+    const coHang = new Set(giaoMay.map((x) => x.ve_tinh_id));
+    const ds = veTinh.filter((v) => coHang.has(v.id) || v.dang_lam !== false)
+      .sort((a, b) => (a.ma || "").localeCompare(b.ma || "", "vi", { numeric: true }));
+    $("locVT").innerHTML = '<option value="">Mọi vệ tinh</option>' + ds.map((v) => {
+      const con = giaoMay.filter((x) => x.ve_tinh_id === v.id).reduce((s, x) => s + x.so_luong_giao - x.so_dat, 0);
+      return `<option value="${v.id}">${esc(tenVT(v.id))}${con ? " · đang giữ " + con : ""}</option>`;
+    }).join("");
+    $("locVT").value = loc.vt && ds.some((v) => v.id === loc.vt) ? loc.vt : "";
+    loc.vt = $("locVT").value;
+  }
 
   async function taiLai() {
-    try { [nhanVien, dsDon, veTinh, giaoMay, qcLan] = await Promise.all([db.dsNhanVien(), db.dsDon(), db.dsVeTinh(), db.dsGiaoMay(), db.dsQc()]); dienChon(); ve(); }
+    try { [nhanVien, dsDon, veTinh, giaoMay, qcLan] = await Promise.all([db.dsNhanVien(), db.dsDon(), db.dsVeTinh(), db.dsGiaoMay(), db.dsQc()]); dienChon(); dienLocVT(); ve(); }
     catch (e) { $("bang").innerHTML = `<div class="giua-trang">${esc(loiDe(e))}</div>`; }
   }
 

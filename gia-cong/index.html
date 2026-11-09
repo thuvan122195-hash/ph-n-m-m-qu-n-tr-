@@ -65,6 +65,7 @@
     <h1>Tiền gia công vệ tinh</h1>
     <p class="ghichu">Tiền công = số cái QC đạt × đơn giá một cái, trả một lần. Cái sửa và cái hư ở lại vệ tinh để may lại (hư thì xưởng cấp lại vải). Giao hàng và ghi QC ở thẻ đơn trên bảng đơn hàng (mục "Giao vệ tinh").</p>
     <div class="loc">
+      <select id="lVT"><option value="">Mọi vệ tinh</option></select>
       <select id="lThang"></select>
       <select id="lTrangThai">
         <option value="chua">Chưa trả tiền</option>
@@ -149,8 +150,8 @@
   }
 
   function locGM() {
-    const th = $("lThang").value, tt = $("lTrangThai").value;
-    return giaoMay.filter((g) => (!th || (g.ngay_giao || "").startsWith(th)) &&
+    const th = $("lThang").value, tt = $("lTrangThai").value, vtid = $("lVT").value;
+    return giaoMay.filter((g) => (!vtid || g.ve_tinh_id === vtid) && (!th || (g.ngay_giao || "").startsWith(th)) &&
       (tt === "tat" || (tt === "da" ? g.da_thanh_toan : !g.da_thanh_toan)));
   }
 
@@ -219,10 +220,17 @@
     const ten = $("vTen").value.trim(); if (!ten) { $("vTen").focus(); return; }
     try {
       const v = await db.taoVeTinh({ ma: $("vMa").value.trim().toUpperCase() || null, ten, sdt: $("vSdt").value.trim() || null, dia_chi: $("vDiaChi").value.trim() || null });
-      veTinh.push(v); $("vMa").value = $("vTen").value = $("vSdt").value = $("vDiaChi").value = ""; veDsVT(); bao("Đã thêm " + v.ten);
+      veTinh.push(v); $("vMa").value = $("vTen").value = $("vSdt").value = $("vDiaChi").value = ""; veDsVT(); dienLocVT(); bao("Đã thêm " + v.ten);
     } catch (e) { $("loiChung").textContent = e.message; }
   });
   $("lThang").addEventListener("change", ve);
+  $("lVT").addEventListener("change", () => { if ($("lVT").value) mo.add($("lVT").value); ve(); });
+  function dienLocVT() {
+    const xep = [...veTinh].sort((a, b) => (a.ma || "").localeCompare(b.ma || "", "vi", { numeric: true }));
+    const cu = $("lVT").value;
+    $("lVT").innerHTML = '<option value="">Mọi vệ tinh</option>' + xep.map((v) => `<option value="${v.id}">${esc((v.ma ? v.ma + " · " : "") + v.ten)}</option>`).join("");
+    $("lVT").value = cu;
+  }
   $("lTrangThai").addEventListener("change", ve);
 
   (async function () {
@@ -234,7 +242,7 @@
     $("toi").textContent = toi.ho_ten;
     try { [veTinh, giaoMay, don] = await Promise.all([db.dsVeTinh(), db.dsGiaoMay(), db.dsDon()]); }
     catch (e) { $("loiChung").textContent = /does not exist|schema cache/i.test(e.message) ? "Hệ thống chưa có bảng vệ tinh. Cần chạy file 02-ve-tinh-gia-cong.sql trên Supabase một lần." : e.message; }
-    dienThang(); ve();
+    dienThang(); dienLocVT(); ve();
   })();
 })();
 </script>
