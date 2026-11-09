@@ -54,6 +54,7 @@
       <div class="dong"><span>Chức vụ</span><span id="chucVu"></span></div>
       <div class="dong"><span>Quyền</span><span id="vaiTro" class="nhan"></span></div>
       <a href="/don-hang/" style="display:block;margin-top:20px;padding:13px;border-radius:10px;background:var(--chinh);color:#fff;font-weight:600;text-decoration:none;text-align:center">Mở bảng đơn hàng</a>
+      <a href="/nhan-vien/" id="linkNV" class="an" style="display:block;margin-top:12px;padding:13px;border-radius:10px;border:1px solid var(--vien);color:var(--chinh);font-weight:600;text-decoration:none;text-align:center">Quản lý nhân viên</a>
       <button id="nutDangXuat" class="phu-btn" type="button">Đăng xuất</button>
     </section>
   </main>
@@ -76,6 +77,7 @@
     $("phongBan").textContent = data.phong_ban || "—";
     $("chucVu").textContent = data.chuc_vu || "—";
     $("vaiTro").textContent = TEN_QUYEN[data.vai_tro] || data.vai_tro;
+    $("linkNV").classList.toggle("an", data.vai_tro !== "admin");
     $("formDangNhap").classList.add("an");
     $("khuChao").classList.remove("an");
   }

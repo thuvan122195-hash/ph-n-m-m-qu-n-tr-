@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>VANSILK – Quản lý nhân viên</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+  :root { --nen:#f6f1ea; --the:#ffffff; --chu:#2b2420; --phu:#8a7d72; --vien:#e6dcd0; --chinh:#8c2f39; --chinh-dam:#6f222b; --loi:#b3261e; --xanh:#2f6b4f; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--nen); font-family:"Be Vietnam Pro", system-ui, sans-serif; color:var(--chu); font-size:14px; }
+  button, input, select { font:inherit; }
+  .an { display:none !important; }
+  header { position:sticky; top:0; z-index:5; background:var(--the); border-bottom:1px solid var(--vien); padding:10px 16px; display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between; }
+  .logo { font-family:"Playfair Display", serif; font-size:22px; letter-spacing:3px; color:var(--chinh); text-decoration:none; }
+  .hang { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .nut { border:0; border-radius:10px; padding:9px 14px; background:var(--chinh); color:#fff; font-weight:600; cursor:pointer; min-height:40px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+  .nut:hover { background:var(--chinh-dam); }
+  .nut.phu { background:transparent; color:var(--chinh); border:1px solid var(--vien); }
+  .nut:disabled { opacity:.5; cursor:not-allowed; }
+  main { max-width:960px; margin:0 auto; padding:16px; display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+  .khoi { min-width:0; }
+  h1 { font-size:22px; margin:0; }
+  h2 { font-size:16px; margin:0 0 10px; }
+  .khoi { background:var(--the); border:1px solid var(--vien); border-radius:12px; padding:16px; }
+  .luoi { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+  label { display:grid; gap:5px; font-size:13px; font-weight:600; min-width:0; }
+  input, select { width:100%; padding:10px 12px; border:1px solid var(--vien); border-radius:10px; background:#fff; color:var(--chu); font-size:15px; font-weight:400; }
+  .quyen { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px; font-size:13px; color:var(--phu); margin-top:10px; }
+  .quyen b { color:var(--chu); }
+  .cuon { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; min-width:720px; }
+  th, td { padding:8px; border-bottom:1px solid var(--vien); text-align:left; vertical-align:middle; }
+  th { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--phu); }
+  td select, td input { padding:6px 8px; font-size:14px; }
+  td .ma { font-weight:700; }
+  .khoa td { color:var(--phu); }
+  .loi { color:var(--loi); font-size:13px; min-height:18px; margin:8px 0 0; }
+  .ghichu { color:var(--phu); font-size:12px; }
+  .bao { position:fixed; left:50%; bottom:16px; transform:translateX(-50%); background:var(--chu); color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; max-width:calc(100vw - 32px); }
+  .thu { background:#b3261e; color:#fff; padding:10px 16px; font-size:14px; }
+  .linknho { border:0; background:none; color:var(--chinh); font-weight:600; cursor:pointer; padding:4px 0; }
+</style>
+</head>
+<body>
+  <div id="thanhThu" class="thu an">⚠️ <b>BẢN CHẠY THỬ – KHÔNG LƯU.</b> Tài khoản tạo ở đây là giả.</div>
+  <header>
+    <div class="hang"><a class="logo" href="/">VANSILK</a><span class="ghichu" id="toi"></span></div>
+    <div class="hang"><a class="nut phu" href="/don-hang/" id="linkBang">Bảng đơn hàng</a></div>
+  </header>
+  <main>
+    <h1>Quản lý nhân viên</h1>
+
+    <section class="khoi">
+      <h2>Tạo tài khoản mới</h2>
+      <div class="luoi">
+        <label>Mã nhân viên<input id="nMa" placeholder="VD: NV002" autocomplete="off"></label>
+        <label>Họ tên<input id="nTen" autocomplete="off"></label>
+        <label>Phòng ban<input id="nPhong" placeholder="VD: Kinh doanh" list="dsPhong"></label>
+        <label>Chức vụ<input id="nChuc" placeholder="VD: Sale sỉ"></label>
+        <label>Quyền
+          <select id="nQuyen">
+            <option value="nhan_vien">Nhân viên</option>
+            <option value="quan_ly">Quản lý</option>
+            <option value="admin">Quản trị</option>
+          </select>
+        </label>
+        <label>Mật khẩu ban đầu<input id="nMk" type="text" autocomplete="new-password" placeholder="ít nhất 6 ký tự"></label>
+      </div>
+      <datalist id="dsPhong"></datalist>
+      <p class="loi" id="nLoi"></p>
+      <button class="nut" type="button" id="nTao">Tạo tài khoản</button>
+      <p class="ghichu">Đưa nhân viên <b>mã</b> + <b>mật khẩu</b> này để đăng nhập ở trang chủ. Quên mật khẩu thì vào đây bấm "Cấp lại mật khẩu".</p>
+      <div class="quyen">
+        <div><b>Nhân viên:</b> xem bảng đơn, tạo đơn, kéo đơn mình đang giữ, ghi giao vệ tinh và QC.</div>
+        <div><b>Quản lý:</b> thêm quyền sửa/kéo mọi đơn, đánh dấu đã trả tiền vệ tinh, sửa lần QC ghi sai.</div>
+        <div><b>Quản trị:</b> mọi việc + tạo, khoá tài khoản, cấp lại mật khẩu, xoá đơn.</div>
+      </div>
+    </section>
+
+    <section class="khoi">
+      <h2>Danh sách tài khoản <span class="ghichu" id="dem"></span></h2>
+      <div class="cuon">
+        <table>
+          <thead><tr><th>Mã</th><th>Họ tên</th><th>Phòng ban</th><th>Chức vụ</th><th>Quyền</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody id="ds"></tbody>
+        </table>
+      </div>
+      <p class="loi" id="dsLoi"></p>
+    </section>
+  </main>
+
+<script>
+(function () {
+  const SUPABASE_URL = "https://vulszpepubwjgjfxqbed.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_ov_B2wedxoZymZQ-j7DKxA_LOkRqXxl"; // khoá công khai, an toàn khi bảng đã bật RLS
+  const $ = (id) => document.getElementById(id);
+  const CHAY_THU = new URLSearchParams(location.search).has("thu");
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function bao(m) { const el = document.createElement("div"); el.className = "bao"; el.textContent = m; document.body.appendChild(el); setTimeout(() => el.remove(), 3500); }
+
+  function dbThat() {
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const tra = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
+    return {
+      async phien() { const { data } = await sb.auth.getSession(); return data.session; },
+      async toi(uid) { return tra(await sb.from("nhan_vien").select("*").eq("id", uid).maybeSingle()); },
+      async ds() { return tra(await sb.from("nhan_vien").select("*").order("ma_nv")) || []; },
+      async tao(r) { return tra(await sb.rpc("tao_nhan_vien", { p_ma: r.ma, p_ho_ten: r.ten, p_mat_khau: r.mk, p_phong_ban: r.phong, p_chuc_vu: r.chuc, p_vai_tro: r.quyen })); },
+      async sua(id, p) { return tra(await sb.from("nhan_vien").update(p).eq("id", id).select().single()); },
+      async datLaiMk(id, mk) { return tra(await sb.rpc("dat_lai_mat_khau", { p_id: id, p_mat_khau: mk })); }
+    };
+  }
+  function dbThu() {
+    const ds = [
+      { id: "u1", ma_nv: "NV001", ho_ten: "Lê Thị Thu Vân", phong_ban: "Ban Giám đốc", chuc_vu: "Giám đốc", vai_tro: "admin", trang_thai: "dang_lam" },
+      { id: "u2", ma_nv: "NV002", ho_ten: "Nhân viên mẫu", phong_ban: "Kinh doanh", chuc_vu: "Sale sỉ", vai_tro: "nhan_vien", trang_thai: "dang_lam" }
+    ];
+    const doi = (o) => JSON.parse(JSON.stringify(o));
+    return {
+      async phien() { return { user: { id: "u1" } }; },
+      async toi() { return doi(ds[0]); },
+      async ds() { return doi(ds); },
+      async tao(r) { if (ds.some((x) => x.ma_nv === r.ma.toUpperCase())) throw new Error("Mã " + r.ma.toUpperCase() + " đã có tài khoản."); const x = { id: "u" + (ds.length + 1), ma_nv: r.ma.toUpperCase(), ho_ten: r.ten, phong_ban: r.phong, chuc_vu: r.chuc, vai_tro: r.quyen, trang_thai: "dang_lam" }; ds.push(x); return x.id; },
+      async sua(id, p) { if (id === "u1" && (p.vai_tro && p.vai_tro !== "admin" || p.trang_thai && p.trang_thai !== "dang_lam")) throw new Error("Không tự hạ quyền hoặc tự khoá tài khoản của chính mình được."); const x = ds.find((y) => y.id === id); Object.assign(x, p); return doi(x); },
+      async datLaiMk() { }
+    };
+  }
+  const db = CHAY_THU ? dbThu() : dbThat();
+  let toi = null, ds = [];
+
+  function loiDe(e) {
+    const m = (e && e.message) || String(e);
+    if (/function .* does not exist|schema cache|does not exist/i.test(m)) return "Hệ thống chưa có phần tài khoản. Cần chạy file 00-nhan-vien-tai-khoan.sql trên Supabase.";
+    return m;
+  }
+
+  function ve() {
+    $("dem").textContent = `· ${ds.filter((x) => x.trang_thai === "dang_lam").length} đang làm / ${ds.length} tài khoản`;
+    $("dsPhong").innerHTML = [...new Set(ds.map((x) => x.phong_ban).filter(Boolean))].map((p) => `<option value="${esc(p)}">`).join("");
+    $("ds").innerHTML = ds.map((x) => {
+      const laToi = x.id === toi.id;
+      return `<tr class="${x.trang_thai !== "dang_lam" ? "khoa" : ""}" data-id="${x.id}">` +
+        `<td class="ma">${esc(x.ma_nv)}</td>` +
+        `<td><input data-f="ho_ten" value="${esc(x.ho_ten)}"></td>` +
+        `<td><input data-f="phong_ban" value="${esc(x.phong_ban || "")}" list="dsPhong"></td>` +
+        `<td><input data-f="chuc_vu" value="${esc(x.chuc_vu || "")}"></td>` +
+        `<td><select data-f="vai_tro" ${laToi ? "disabled" : ""}>` +
+          [["nhan_vien", "Nhân viên"], ["quan_ly", "Quản lý"], ["admin", "Quản trị"]].map(([v, t]) => `<option value="${v}" ${x.vai_tro === v ? "selected" : ""}>${t}</option>`).join("") + `</select></td>` +
+        `<td><select data-f="trang_thai" ${laToi ? "disabled" : ""}>` +
+          [["dang_lam", "Đang làm"], ["tam_khoa", "Tạm khoá"], ["nghi_viec", "Nghỉ việc"]].map(([v, t]) => `<option value="${v}" ${x.trang_thai === v ? "selected" : ""}>${t}</option>`).join("") + `</select></td>` +
+        `<td><button class="linknho" type="button" data-mk="${x.id}">Cấp lại mật khẩu</button></td></tr>`;
+    }).join("");
+    $("ds").querySelectorAll("[data-f]").forEach((el) => el.addEventListener("change", async () => {
+      const id = el.closest("tr").dataset.id; $("dsLoi").textContent = "";
+      try {
+        const r = await db.sua(id, { [el.dataset.f]: el.value.trim() || null });
+        ds = ds.map((x) => (x.id === r.id ? r : x)); ve(); bao("Đã lưu " + r.ma_nv);
+      } catch (e) { $("dsLoi").textContent = loiDe(e); ve(); }
+    }));
+    $("ds").querySelectorAll("[data-mk]").forEach((b) => b.addEventListener("click", async () => {
+      const x = ds.find((y) => y.id === b.dataset.mk);
+      const mk = (prompt(`Mật khẩu mới cho ${x.ma_nv} – ${x.ho_ten} (ít nhất 6 ký tự):`) || "").trim();
+      if (!mk) return;
+      if (mk.length < 6) { $("dsLoi").textContent = "Mật khẩu cần ít nhất 6 ký tự."; return; }
+      try { await db.datLaiMk(x.id, mk); bao(`Đã đổi mật khẩu cho ${x.ma_nv}. Báo nhân viên mật khẩu mới.`); }
+      catch (e) { $("dsLoi").textContent = loiDe(e); }
+    }));
+  }
+
+  $("nTao").addEventListener("click", async () => {
+    const r = { ma: $("nMa").value.trim(), ten: $("nTen").value.trim(), phong: $("nPhong").value.trim() || null, chuc: $("nChuc").value.trim() || null, quyen: $("nQuyen").value, mk: $("nMk").value };
+    $("nLoi").textContent = "";
+    if (!/^[A-Za-z0-9_.-]+$/.test(r.ma)) { $("nLoi").textContent = "Mã nhân viên chỉ gồm chữ không dấu và số, VD NV002."; return; }
+    if (!r.ten) { $("nLoi").textContent = "Cần có họ tên."; return; }
+    if (r.mk.length < 6) { $("nLoi").textContent = "Mật khẩu cần ít nhất 6 ký tự."; return; }
+    if (r.quyen === "admin" && !confirm("Quyền Quản trị được tạo/khoá tài khoản và xoá đơn. Chắc chắn cấp quyền này?")) return;
+    $("nTao").disabled = true;
+    try {
+      await db.tao(r);
+      ds = await db.ds(); ve();
+      bao(`Đã tạo ${r.ma.toUpperCase()} – ${r.ten}. Đưa nhân viên mã + mật khẩu để đăng nhập.`);
+      ["nMa", "nTen", "nChuc", "nMk"].forEach((i) => { $(i).value = ""; });
+    } catch (e) { $("nLoi").textContent = loiDe(e); }
+    finally { $("nTao").disabled = false; }
+  });
+
+  (async function () {
+    $("thanhThu").classList.toggle("an", !CHAY_THU);
+    if (CHAY_THU) $("linkBang").href = "/don-hang/?thu=1";
+    const p = await db.phien(); if (!p) { location.href = "/"; return; }
+    try { toi = await db.toi(p.user.id); } catch (e) { toi = null; }
+    if (!toi || toi.trang_thai !== "dang_lam") { location.href = "/"; return; }
+    if (toi.vai_tro !== "admin") { document.querySelector("main").innerHTML = '<p class="khoi">Chỉ tài khoản Quản trị mới vào được trang này.</p>'; return; }
+    $("toi").textContent = toi.ho_ten + " · Quản trị";
+    try { ds = await db.ds(); ve(); } catch (e) { $("dsLoi").textContent = loiDe(e); }
+  })();
+})();
+</script>
+</body>
+</html>
