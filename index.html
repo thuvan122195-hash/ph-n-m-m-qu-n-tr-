@@ -38,11 +38,11 @@
   <main class="the">
     <h1 class="logo">VANSILK</h1>
     <p class="phude">Hệ thống nội bộ nhân viên</p>
-    <form id="formDangNhap">
+    <form id="formDangNhap" method="post" action="#">
       <label for="maNV">Mã nhân viên</label>
-      <input id="maNV" placeholder="VD: NV001" autocomplete="username" required>
+      <input id="maNV" name="username" placeholder="VD: NV001" autocomplete="username" autocapitalize="characters" autocorrect="off" spellcheck="false" required>
       <label for="matKhau">Mật khẩu</label>
-      <input id="matKhau" type="password" placeholder="••••••••" autocomplete="current-password" required>
+      <input id="matKhau" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
       <button id="nutDangNhap" type="submit">Đăng nhập</button>
       <p id="thongBao" class="thongbao"></p>
       <p class="goiy">Quên mật khẩu? Liên hệ phòng Nhân sự để được cấp lại.</p>
