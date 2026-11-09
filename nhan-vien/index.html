@@ -48,6 +48,7 @@
   <div id="thanhThu" class="thu an">⚠️ <b>BẢN CHẠY THỬ – KHÔNG LƯU.</b> Tài khoản tạo ở đây là giả.</div>
   <header>
     <div class="hang"><a class="logo" href="/">VANSILK</a><span class="ghichu" id="toi"></span></div>
+    <datalist id="dsChuc"></datalist>
     <div class="hang"><a class="nut phu" href="/don-hang/" id="linkBang">Bảng đơn hàng</a></div>
   </header>
   <main>
@@ -58,8 +59,8 @@
       <div class="luoi">
         <label>Mã nhân viên<input id="nMa" placeholder="VD: NV002" autocomplete="off"></label>
         <label>Họ tên<input id="nTen" autocomplete="off"></label>
-        <label>Phòng ban<input id="nPhong" placeholder="VD: Kinh doanh" list="dsPhong"></label>
-        <label>Chức vụ<input id="nChuc" placeholder="VD: Sale sỉ"></label>
+        <label>Phòng ban<select id="nPhong"></select></label>
+        <label>Vị trí / chức vụ<input id="nChuc" placeholder="Chọn hoặc gõ: Sale admin, Rập…" list="dsChuc"></label>
         <label>Quyền
           <select id="nQuyen">
             <option value="nhan_vien">Nhân viên</option>
@@ -116,7 +117,7 @@
   function dbThu() {
     const ds = [
       { id: "u1", ma_nv: "NV001", ho_ten: "Lê Thị Thu Vân", phong_ban: "Ban Giám đốc", chuc_vu: "Giám đốc", vai_tro: "admin", trang_thai: "dang_lam" },
-      { id: "u2", ma_nv: "NV002", ho_ten: "Nhân viên mẫu", phong_ban: "Kinh doanh", chuc_vu: "Sale sỉ", vai_tro: "nhan_vien", trang_thai: "dang_lam" }
+      { id: "u2", ma_nv: "NV002", ho_ten: "Nhân viên mẫu", phong_ban: "Kinh doanh & Marketing", chuc_vu: "Sale sỉ", vai_tro: "nhan_vien", trang_thai: "dang_lam" }
     ];
     const doi = (o) => JSON.parse(JSON.stringify(o));
     return {
@@ -130,6 +131,27 @@
   }
   const db = CHAY_THU ? dbThu() : dbThat();
   let toi = null, ds = [];
+  // Đúng 5 phòng ban + 3 trạng thái của bảng nhan_vien trên Supabase
+  const PHONG = ["Ban Giám đốc", "Kỹ thuật & Phát triển mẫu", "Sản xuất", "Kinh doanh & Marketing", "Hành chính - Nhân sự - Kế toán"];
+  const TRANG_THAI = [["dang_lam", "Đang làm"], ["tam_nghi", "Tạm nghỉ"], ["da_nghi", "Đã nghỉ"]];
+  const chonPhong = (gt) => '<option value="">– Chọn phòng –</option>' + PHONG.map((p) => `<option ${p === gt ? "selected" : ""}>${esc(p)}</option>`).join("");
+  $("nPhong").innerHTML = chonPhong("");
+  // 7 vị trí văn phòng Sếp kể 09/11/2026 → phòng ban + quyền gợi ý (Sếp đổi được)
+  const VI_TRI = {
+    "Sale admin": ["Kinh doanh & Marketing", "nhan_vien"],
+    "Rập": ["Kỹ thuật & Phát triển mẫu", "nhan_vien"],
+    "May mẫu": ["Kỹ thuật & Phát triển mẫu", "nhan_vien"],
+    "Điều phối": ["Sản xuất", "nhan_vien"],
+    "QC": ["Sản xuất", "nhan_vien"],
+    "Kế toán": ["Hành chính - Nhân sự - Kế toán", "quan_ly"],
+    "Quản lý": ["Ban Giám đốc", "quan_ly"]
+  };
+  $("dsChuc").innerHTML = Object.keys(VI_TRI).map((v) => `<option value="${esc(v)}">`).join("");
+  $("nChuc").addEventListener("change", () => {
+    const g = VI_TRI[$("nChuc").value.trim()];
+    if (!g) return;
+    $("nPhong").value = g[0]; $("nQuyen").value = g[1];
+  });
 
   function loiDe(e) {
     const m = (e && e.message) || String(e);
@@ -139,18 +161,17 @@
 
   function ve() {
     $("dem").textContent = `· ${ds.filter((x) => x.trang_thai === "dang_lam").length} đang làm / ${ds.length} tài khoản`;
-    $("dsPhong").innerHTML = [...new Set(ds.map((x) => x.phong_ban).filter(Boolean))].map((p) => `<option value="${esc(p)}">`).join("");
     $("ds").innerHTML = ds.map((x) => {
       const laToi = x.id === toi.id;
       return `<tr class="${x.trang_thai !== "dang_lam" ? "khoa" : ""}" data-id="${x.id}">` +
         `<td class="ma">${esc(x.ma_nv)}</td>` +
         `<td><input data-f="ho_ten" value="${esc(x.ho_ten)}"></td>` +
-        `<td><input data-f="phong_ban" value="${esc(x.phong_ban || "")}" list="dsPhong"></td>` +
-        `<td><input data-f="chuc_vu" value="${esc(x.chuc_vu || "")}"></td>` +
+        `<td><select data-f="phong_ban">${chonPhong(x.phong_ban)}</select></td>` +
+        `<td><input data-f="chuc_vu" value="${esc(x.chuc_vu || "")}" list="dsChuc"></td>` +
         `<td><select data-f="vai_tro" ${laToi ? "disabled" : ""}>` +
           [["nhan_vien", "Nhân viên"], ["quan_ly", "Quản lý"], ["admin", "Quản trị"]].map(([v, t]) => `<option value="${v}" ${x.vai_tro === v ? "selected" : ""}>${t}</option>`).join("") + `</select></td>` +
         `<td><select data-f="trang_thai" ${laToi ? "disabled" : ""}>` +
-          [["dang_lam", "Đang làm"], ["tam_khoa", "Tạm khoá"], ["nghi_viec", "Nghỉ việc"]].map(([v, t]) => `<option value="${v}" ${x.trang_thai === v ? "selected" : ""}>${t}</option>`).join("") + `</select></td>` +
+          TRANG_THAI.map(([v, t]) => `<option value="${v}" ${x.trang_thai === v ? "selected" : ""}>${t}</option>`).join("") + `</select></td>` +
         `<td><button class="linknho" type="button" data-mk="${x.id}">Cấp lại mật khẩu</button></td></tr>`;
     }).join("");
     $("ds").querySelectorAll("[data-f]").forEach((el) => el.addEventListener("change", async () => {

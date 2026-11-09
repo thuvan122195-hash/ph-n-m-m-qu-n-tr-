@@ -18,12 +18,16 @@ create table if not exists public.nhan_vien (
   id          uuid primary key references auth.users(id) on delete cascade,
   ma_nv       text not null unique,
   ho_ten      text not null,
-  phong_ban   text,
+  so_dien_thoai text,
+  email       text,
+  phong_ban   text check (phong_ban in ('Ban Giám đốc','Kỹ thuật & Phát triển mẫu','Sản xuất','Kinh doanh & Marketing','Hành chính - Nhân sự - Kế toán')),
   chuc_vu     text,
   vai_tro     text not null default 'nhan_vien' check (vai_tro in ('admin','quan_ly','nhan_vien')),
-  trang_thai  text not null default 'dang_lam' check (trang_thai in ('dang_lam','tam_khoa','nghi_viec')),
-  tao_luc     timestamptz not null default now()
+  trang_thai  text not null default 'dang_lam' check (trang_thai in ('dang_lam','tam_nghi','da_nghi')),
+  ngay_vao_lam date,
+  created_at  timestamptz not null default now()
 );
+-- (Bảng nhan_vien trên Supabase đã có sẵn từ trước với đúng cấu trúc trên — lệnh tạo bảng sẽ được bỏ qua.)
 
 -- Hàm kiểm tra quyền (file 01 cũng có, chạy lại không sao)
 create or replace function public.la_nv_dang_lam() returns boolean
