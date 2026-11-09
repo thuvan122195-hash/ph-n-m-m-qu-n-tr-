@@ -229,9 +229,16 @@
 (function () {
   const SUPABASE_URL = "https://vulszpepubwjgjfxqbed.supabase.co";
   const SUPABASE_KEY = "sb_publishable_ov_B2wedxoZymZQ-j7DKxA_LOkRqXxl"; // khoá công khai, an toàn khi bảng đã bật RLS
-  // 11 chặng Sếp chốt 09/11/2026
-  const CHANG = ["", "1 Nhận đơn", "2 Ra rập", "3 May mẫu", "4 Duyệt mẫu", "5 Lên đơn SX", "6 Đã cắt", "7 Đang may", "8 QC", "9 Bàn giao Sale", "10 Đã giao khách", "11 Phản hồi khách"];
-  const SO_CHANG = 11;
+  // 12 chặng Sếp chốt 09/11/2026
+  const CHANG = ["", "1 Nhận đơn", "2 Ra rập", "3 May mẫu", "4 Duyệt mẫu", "5 Lên đơn SX", "6 Đã cắt", "7 Đang may", "8 QC", "9 Bàn giao kho", "10 Xuất cho Sale", "11 Đã giao khách", "12 Phản hồi khách"];
+  const SO_CHANG = 12;
+  const CHANG_GIAO_KHACH = 11;
+  // Quyền theo ghế (khớp file supabase/03): sửa đơn ở chặng mình, đẩy sang đúng 1 chặng kế bên
+  const PHAN_VIEC = {
+    toan_quyen: [1,2,3,4,5,6,7,8,9,10,11,12], sale: [1,2,3,4,5,10,11,12], rap: [2,3,4], may_mau: [3],
+    dieu_phoi: [1,2,3,4,5,6,7], qc: [8,9], kho: [9], ke_toan: [], xem: []
+  };
+  const TEN_GHE = { toan_quyen: "Quản lý", sale: "Sale", rap: "Rập", may_mau: "May mẫu", dieu_phoi: "Điều phối", qc: "QC", kho: "Kho", ke_toan: "Kế toán", xem: "Xem" };
   const CHANG_CAT = 6;        // muốn sang chặng này phải đủ 3 khoá
   const NGAY_DO = 3;
   const HAI_LONG = { hai_long: "😊 Hài lòng", binh_thuong: "😐 Bình thường", khieu_nai: "⚠️ Khiếu nại" };
@@ -276,9 +283,9 @@
       mk({ ma_don: "DH-001", ten_khach: "Shop mẫu A", san_pham: "Đầm lụa 2 dây", so_luong: 120, chang: 2, nguoi_giu: "u3", dang_cho: "Chờ khách gửi số đo vòng ngực", uu_tien: "P1", vao_chang_luc: ngay(5), han_giao: "2026-11-20" }),
       mk({ ma_don: "DH-002", ten_khach: "Shop mẫu B", san_pham: "Áo sơ mi lụa", so_luong: 80, chang: 5, nguoi_giu: "u2", dang_cho: "Chờ vải về", uu_tien: "P2", khoa_ky_thuat: true, khoa_rap: true, vao_chang_luc: ngay(1) }),
       mk({ ma_don: "DH-003", ten_khach: "Khách lạ C", san_pham: "Mẫu test", chang: 1, nguoi_giu: "u2", uu_tien: "P4", vao_chang_luc: ngay(0) }),
-      mk({ ma_don: "DH-004", ten_khach: "Shop mẫu D", san_pham: "Quần suông", so_luong: 200, chang: 10, nguoi_giu: "u1", dang_cho: "Khách hẹn chuyển nốt 50%", uu_tien: "P0", vao_chang_luc: ngay(9), han_giao: "2026-11-01" }),
+      mk({ ma_don: "DH-004", ten_khach: "Shop mẫu D", san_pham: "Quần suông", so_luong: 200, chang: 11, nguoi_giu: "u1", dang_cho: "Khách hẹn chuyển nốt 50%", uu_tien: "P0", vao_chang_luc: ngay(9), han_giao: "2026-11-01" }),
       mk({ ma_don: "DH-005", ten_khach: "Shop mẫu E", san_pham: "Đầm suông", so_luong: 150, don_gia_gia_cong: 28000, chang: 7, nguoi_giu: "u4", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, vao_chang_luc: ngay(2) }),
-      mk({ ma_don: "DH-006", ten_khach: "Shop mẫu F", san_pham: "Đầm lụa xoè", so_luong: 100, chang: 11, nguoi_giu: "u2", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, da_thu_du: true, muc_hai_long: "hai_long", phan_hoi: "Form đẹp, khách đặt thêm 50 cái", vao_chang_luc: ngay(1) })
+      mk({ ma_don: "DH-006", ten_khach: "Shop mẫu F", san_pham: "Đầm lụa xoè", so_luong: 100, chang: 12, nguoi_giu: "u2", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, da_thu_du: true, muc_hai_long: "hai_long", phan_hoi: "Form đẹp, khách đặt thêm 50 cái", vao_chang_luc: ngay(1) })
     ];
     const ls = [];
     const vt = [{ id: "v1", ma: "XM-A", ten: "Vệ tinh mẫu A", sdt: "", dang_lam: true }, { id: "v2", ma: "XM-B", ten: "Vệ tinh mẫu B", sdt: "", dang_lam: true }];
@@ -305,7 +312,11 @@
     }
     return {
       async phien() { return { user: { id: "u1" } }; },
-      async toi() { return { id: "u1", ma_nv: "NV001", ho_ten: "Lê Thị Thu Vân", phong_ban: "Ban Giám đốc", chuc_vu: "Giám đốc", vai_tro: "admin", trang_thai: "dang_lam" }; },
+      async toi() {
+        const g = new URLSearchParams(location.search).get("ghe"); // chạy thử theo ghế: ?thu=1&ghe=QC
+        if (g) return { id: "u9", ma_nv: "THU", ho_ten: "Thử ghế " + g, chuc_vu: g, vai_tro: /kế toán/i.test(g) ? "quan_ly" : "nhan_vien", trang_thai: "dang_lam" };
+        return { id: "u1", ma_nv: "NV001", ho_ten: "Lê Thị Thu Vân", phong_ban: "Ban Giám đốc", chuc_vu: "Giám đốc", vai_tro: "admin", trang_thai: "dang_lam" };
+      },
       async dsNhanVien() { return doi(nv); },
       async dsDon() { return doi(don); },
       async tao(row) {
@@ -352,10 +363,31 @@
   const loc = { cuatoi: false, chamdo: false, xong: false, tim: "", vt: "" };
   const tenNV = (id) => (nhanVien.find((n) => n.id === id) || {}).ho_ten || "Chưa giao";
   const laQuanLy = () => toi && (toi.vai_tro === "admin" || toi.vai_tro === "quan_ly");
-  const duocSua = (d) => !d || laQuanLy() || d.nguoi_giu === toi.id;
+  const ghe = () => {
+    if (!toi || toi.trang_thai !== "dang_lam") return "xem";
+    const cv = (toi.chuc_vu || "").toLowerCase();
+    if (toi.vai_tro === "admin") return "toan_quyen";
+    if (cv.includes("kế toán")) return "ke_toan";
+    if (toi.vai_tro === "quan_ly") return "toan_quyen";
+    if (cv.includes("sale")) return "sale";
+    if (cv.includes("may mẫu")) return "may_mau";
+    if (cv.includes("rập")) return "rap";
+    if (cv.includes("điều phối")) return "dieu_phoi";
+    if (cv.includes("qc")) return "qc";
+    if (cv.includes("kho")) return "kho";
+    return "xem";
+  };
+  const phanViec = () => PHAN_VIEC[ghe()] || [];
+  const duocSua = (d) => d ? phanViec().includes(d.chang) : phanViec().includes(1); // tạo đơn: ghế lo khâu nhận đơn
+  // Được kéo tới chặng 'den' không: trong phần việc của mình, hoặc đẩy sang đúng chặng kế tiếp
+  // Đoạn liền nhau chứa chặng hiện tại (Sale có 2 đoạn 1–5 và 10–12, không nhảy qua sản xuất)
+  const doan = (c) => { const r = phanViec(); let lo = c, hi = c; while (r.includes(lo - 1)) lo--; while (r.includes(hi + 1)) hi++; return [lo, hi]; };
+  const duocKeo = (d, den) => { if (!duocSua(d) || den < 1 || den > SO_CHANG) return false; const [lo, hi] = doan(d.chang); return (den >= lo && den <= hi) || den === d.chang + 1; };
+  const duocGiaoVT = () => ["toan_quyen", "dieu_phoi"].includes(ghe());
+  const duocGhiQC = () => ["toan_quyen", "qc"].includes(ghe());
   const soNgay = (d) => Math.max(0, Math.floor((Date.now() - new Date(d.vao_chang_luc).getTime()) / 864e5));
   const homNay = () => new Date().toISOString().slice(0, 10);
-  const treHan = (d) => d.han_giao && d.han_giao < homNay() && d.chang < 10 && !d.hoan_tat;
+  const treHan = (d) => d.han_giao && d.han_giao < homNay() && d.chang < CHANG_GIAO_KHACH && !d.hoan_tat;
   const ngayVN = (s) => s ? s.split("-").reverse().join("/") : "";
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -392,7 +424,7 @@
       `<span>Đang chạy <b>${conChay.length}</b></span>` +
       `<span class="do">Chấm đỏ <b>${doCount}</b></span>` +
       `<span>Trễ hạn <b>${conChay.filter(treHan).length}</b></span>` +
-      `<span>Đã giao chưa thu đủ <b>${conChay.filter((d) => d.chang >= 10 && !d.da_thu_du).length}</b></span>` +
+      `<span>Đã giao chưa thu đủ <b>${conChay.filter((d) => d.chang >= CHANG_GIAO_KHACH && !d.da_thu_du).length}</b></span>` +
       `<span>Khiếu nại <b>${conChay.filter((d) => d.muc_hai_long === "khieu_nai").length}</b></span>` +
       (loc.vt ? (() => {
         const g = giaoMay.filter((x) => x.ve_tinh_id === loc.vt);
@@ -417,11 +449,11 @@
           (() => { const g = giaoMay.filter((x) => x.don_id === d.id); if (!g.length) return "";
             const theoVT = {};
             g.forEach((x) => { const t = theoVT[x.ve_tinh_id] || (theoVT[x.ve_tinh_id] = { giao: 0, dat: 0 }); t.giao += x.so_luong_giao; t.dat += x.so_dat; });
-            return `<span class="vtthe">🧵 ${Object.entries(theoVT).map(([id, t]) => {
+            return `<span class="vtthe">🧵 Vệ tinh: ${Object.entries(theoVT).map(([id, t]) => {
               const v = veTinh.find((y) => y.id === id) || {};
-              return `<b class="${t.dat >= t.giao ? "du" : ""}${loc.vt === id ? " chon" : ""}" title="${esc(tenVT(id))}">${esc(v.ma || v.ten || "?")} ${t.dat}/${t.giao}</b>`;
+              return `<b class="${t.dat >= t.giao ? "du" : ""}${loc.vt === id ? " chon" : ""}" title="${esc(tenVT(id))}">${esc(v.ma || v.ten || "?")} may ${t.giao} · đạt ${t.dat}</b>`;
             }).join(" ")}</span>`; })() +
-          (c >= 10 && !d.da_thu_du ? `<span class="trehan">Chưa thu đủ</span>` : "") +
+          (c >= CHANG_GIAO_KHACH && !d.da_thu_du ? `<span class="trehan">Chưa thu đủ</span>` : "") +
           (d.muc_hai_long ? `<span>${HAI_LONG[d.muc_hai_long]}</span>` : "");
         b.innerHTML =
           `<div class="dau"><span class="ma">${esc(d.ma_don)}</span><span class="p">${d.uu_tien}</span></div>` +
@@ -480,24 +512,33 @@
     $("khuLichSu").classList.toggle("an", moi);
     const c = moi ? 1 : d.chang;
     $("khuKhoa").classList.toggle("an", !moi && c < 4);
-    $("khuThu").classList.toggle("an", moi || c < 9);
-    $("khuPhanHoi").classList.toggle("an", moi || c < 10);
+    $("khuThu").classList.toggle("an", moi || (c < 10 && ghe() !== "ke_toan"));
+    $("khuPhanHoi").classList.toggle("an", moi || c < CHANG_GIAO_KHACH);
     $("khuHoanTat").classList.toggle("an", moi || c < SO_CHANG);
     $("khuGiaoMay").classList.toggle("an", moi || (c < CHANG_CAT && !giaoMay.some((x) => x.don_id === d.id)));
-    $("gmForm").classList.add("an"); $("gThem").classList.remove("an");
+    $("gmForm").classList.add("an"); $("qcForm").classList.add("an"); $("gThem").classList.toggle("an", !duocGiaoVT());
     if (!moi) veGiaoMay();
     if (!moi) {
       $("fNhay").value = String(c);
-      $("nutLui").disabled = !sua || c === 1;
-      $("nutTien").disabled = !sua || c === SO_CHANG;
+      $("nutLui").disabled = !duocKeo(d, c - 1);
+      $("nutTien").disabled = !duocKeo(d, c + 1);
+      [...$("fNhay").options].forEach((o) => { const v = +o.value; o.disabled = v !== c && !duocKeo(d, v); });
       $("nutTien").textContent = c < SO_CHANG ? "Sang " + CHANG[c + 1].split(" ")[0] + " ▶" : "Chặng cuối";
     }
     // Phần giao vệ tinh: ai đang làm cũng ghi được (điều phối, QC đếm đạt) nên không khoá theo người giữ đơn
-    $("formDon").querySelectorAll("input, select, textarea").forEach((el) => { if (!el.closest("#khuGiaoMay")) el.disabled = !sua; });
-    $("fMa").disabled = !moi && !laQuanLy();
-    $("nutLuu").classList.toggle("an", !sua);
+    const keToan = !moi && ghe() === "ke_toan";
+    $("formDon").querySelectorAll("input, select, textarea").forEach((el) => {
+      if (el.closest("#khuGiaoMay")) return;
+      el.disabled = keToan ? !["fThuDu", "fGhiChu"].includes(el.id) : !sua;
+    });
+    if (!moi) $("fNhay").disabled = !sua;
+    if (moi) [...$("fChang").options].forEach((o) => { o.disabled = !phanViec().includes(+o.value); });
+    if (moi) $("fChang").value = String(phanViec()[0] || 1);
+    $("fMa").disabled = !moi && ghe() !== "toan_quyen";
+    $("nutLuu").classList.toggle("an", !sua && !keToan);
     $("nutXoa").classList.toggle("an", moi || !toi || toi.vai_tro !== "admin");
-    $("quyen").textContent = sua ? "" : "Chị đang xem. Chỉ người đang giữ đơn hoặc Quản lý mới sửa được đơn này.";
+    $("quyen").textContent = keToan ? "Kế toán: chỉ tick «Tiền đã về đủ» và ghi chú." :
+      sua ? "" : `Đơn đang ở «${CHANG[c]}», không thuộc phần việc của ghế ${TEN_GHE[ghe()]} nên chị chỉ xem được.`;
     $("hopDon").showModal();
 
     if (!moi) {
@@ -535,7 +576,7 @@
         `<div class="so">${con ? `Còn ở vệ tinh <b>${con}</b> cái (đang sửa / may lại)` : '<span class="datra">Đã đạt đủ số giao</span>'}${pct !== null ? ` · Đạt lần 1 <b>${pct}%</b> (${x.so_dat_lan1}/${x.so_kiem_lan1})` : ""}</div>` +
         (huMay + huVai ? `<div class="so">Xưởng cấp lại vải: <b>${huMay + huVai}</b> cái (${huMay} do may hỏng · ${huVai} do lỗi vải/cắt)</div>` : "") +
         `<div class="so">Tiền công: ${x.so_dat} cái đạt × ${tien(x.don_gia)} = <b>${tien(x.thanh_tien)}</b></div>` +
-        `<div class="hang">${con > 0 && !x.da_thanh_toan ? `<button type="button" data-qc="${x.id}">+ Ghi lần nhận về / QC</button>` : ""}<button type="button" data-gm="${x.id}">Sửa dòng giao</button></div></li>`;
+        `<div class="hang">${con > 0 && !x.da_thanh_toan && duocGhiQC() ? `<button type="button" data-qc="${x.id}">+ Ghi lần nhận về / QC</button>` : ""}${duocGiaoVT() ? `<button type="button" data-gm="${x.id}">Sửa dòng giao</button>` : ""}</div></li>`;
     }).join("") : '<li class="so">Chưa giao vệ tinh nào.</li>';
     $("gmDs").querySelectorAll("[data-gm]").forEach((b) => b.addEventListener("click", () => moGM(giaoMay.find((x) => x.id === b.dataset.gm))));
     $("gmDs").querySelectorAll("[data-qc]").forEach((b) => b.addEventListener("click", () => moQC(giaoMay.find((x) => x.id === b.dataset.qc))));
@@ -685,7 +726,7 @@
         bao(CHAY_THU ? "Bản chạy thử: đơn " + moi.ma_don + " KHÔNG được lưu, tải lại trang là mất." : "Đã tạo đơn " + moi.ma_don);
       } else {
         const patch = Object.assign(f, patchThem || {});
-        if (!laQuanLy()) delete patch.ma_don;
+        if (ghe() !== "toan_quyen") delete patch.ma_don;
         const moi = await db.sua(dangMo.id, patch);
         dsDon = dsDon.map((x) => (x.id === moi.id ? moi : x)); dangMo = moi;
         bao(patchThem && patchThem.chang ? "Đã chuyển " + moi.ma_don + " sang " + CHANG[moi.chang] : "Đã lưu " + moi.ma_don);
@@ -751,6 +792,7 @@
     if (!phien) { location.href = "/"; return; }
     try { toi = await db.toi(phien.user.id); } catch (e) { toi = null; }
     if (!toi || toi.trang_thai !== "dang_lam") { location.href = "/"; return; }
+    $("nutTao").classList.toggle("an", !duocSua(null));
     $("toi").textContent = toi.ho_ten + " · " + ({ admin: "Quản trị", quan_ly: "Quản lý", nhan_vien: "Nhân viên" }[toi.vai_tro] || toi.vai_tro);
     await taiLai();
     $("dangTai").classList.add("an");

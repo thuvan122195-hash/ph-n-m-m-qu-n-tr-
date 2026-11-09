@@ -1,7 +1,7 @@
 -- =====================================================================
--- VANSILK · BẢNG ĐƠN HÀNG CHUNG (11 chặng, Sếp chốt 09/11/2026)
+-- VANSILK · BẢNG ĐƠN HÀNG CHUNG (12 chặng từ 09/11/2026 — xem file 03)
 --  1 Nhận đơn · 2 Ra rập · 3 May mẫu · 4 Duyệt mẫu · 5 Lên đơn SX · 6 Đã cắt
---  7 Đang may · 8 QC · 9 Bàn giao Sale · 10 Đã giao khách · 11 Phản hồi khách
+--  7 Đang may · 8 QC · 9 Bàn giao kho · 10 Xuất cho Sale · 11 Đã giao khách · 12 Phản hồi khách
 -- Cách chạy: Supabase → SQL Editor → New query → dán toàn bộ file → Run.
 -- Chạy lại nhiều lần cũng không hỏng (không xoá dữ liệu đã có).
 -- Cần sẵn bảng nhan_vien (id = id tài khoản đăng nhập, vai_tro, trang_thai).
@@ -67,7 +67,7 @@ alter table public.don_hang add column if not exists hoan_tat boolean not null d
 alter table public.don_hang add column if not exists phan_hoi text;                             -- lời khách phản hồi
 alter table public.don_hang add column if not exists muc_hai_long text;                         -- hai_long / binh_thuong / khieu_nai
 alter table public.don_hang drop constraint if exists don_hang_chang_check;
-alter table public.don_hang add constraint don_hang_chang_check check (chang between 1 and 11);
+alter table public.don_hang add constraint don_hang_chang_check check (chang between 1 and 12);
 alter table public.don_hang drop constraint if exists don_hang_muc_hai_long_check;
 alter table public.don_hang add constraint don_hang_muc_hai_long_check
   check (muc_hai_long is null or muc_hai_long in ('hai_long','binh_thuong','khieu_nai'));
