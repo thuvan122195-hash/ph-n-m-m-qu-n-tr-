@@ -32,7 +32,7 @@
   .tom .do b { color:var(--loi); }
   .tim { padding:8px 12px; border:1px solid var(--vien); border-radius:99px; background:var(--the); min-width:180px; }
 
-  .bang { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px, 1fr); gap:12px; padding:4px 16px 24px; overflow-x:auto; align-items:start; }
+  .bang { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(240px, 1fr); gap:12px; padding:4px 16px 24px; overflow-x:auto; align-items:start; }
   .cot { background:var(--cot); border-radius:12px; padding:10px; min-height:120px; display:grid; gap:8px; align-content:start; }
   .cot h2 { margin:0 2px 4px; font-size:13px; font-weight:700; display:flex; justify-content:space-between; gap:8px; }
   .cot h2 small { color:var(--phu); font-weight:600; }
@@ -94,7 +94,7 @@
   <div class="loc" id="thanhLoc">
     <button class="chip" type="button" data-loc="cuatoi" aria-pressed="false">Đơn tôi giữ</button>
     <button class="chip" type="button" data-loc="chamdo" aria-pressed="false">Chỉ đơn chấm đỏ</button>
-    <button class="chip" type="button" data-loc="xong" aria-pressed="false">Hiện đơn đã thu đủ</button>
+    <button class="chip" type="button" data-loc="xong" aria-pressed="false">Hiện đơn đã đóng</button>
     <input class="tim" id="tim" type="search" placeholder="Tìm mã đơn, khách, sản phẩm">
     <div class="tom" id="tom"></div>
   </div>
@@ -107,7 +107,7 @@
       <h3 id="tieuDe">Đơn hàng</h3>
       <div class="chuyen" id="khuChuyen">
         <button class="nut phu" type="button" id="nutLui">◀ Lùi</button>
-        <span class="giua" id="changHien"></span>
+        <select id="fNhay" aria-label="Nhảy tới chặng" style="width:auto;flex:1;min-width:150px;font-weight:700"></select>
         <button class="nut" type="button" id="nutTien">Chuyển tiếp ▶</button>
       </div>
       <div class="luoi">
@@ -130,12 +130,25 @@
       </div>
       <label>Đang chờ cái gì<input id="fCho" placeholder="VD: chờ khách gửi số đo, chờ vải về 15/11"></label>
       <div class="khoi" id="khuKhoa">
-        <h4>3 khoá trước khi vào Sản xuất</h4>
+        <h4>3 khoá trước khi cắt (kiểm ở chặng Lên đơn SX)</h4>
         <label class="tick"><input type="checkbox" id="kKyThuat"> 🔑 Bảng kỹ thuật đã có, đã ký</label>
         <label class="tick"><input type="checkbox" id="kVai"> 🔑 Vải đã về kho, đã soi, đủ số mét</label>
         <label class="tick"><input type="checkbox" id="kRap"> 🔑 Rập + số đo đã chốt (khách duyệt)</label>
       </div>
-      <label class="tick" id="khuThu"><input type="checkbox" id="fThuDu"> Tiền đã về đủ (đơn rời khỏi bảng)</label>
+      <label class="tick" id="khuThu"><input type="checkbox" id="fThuDu"> Tiền đã về đủ</label>
+      <div class="khoi" id="khuPhanHoi">
+        <h4>Phản hồi của khách</h4>
+        <label>Mức hài lòng
+          <select id="fHaiLong">
+            <option value="">Chưa hỏi</option>
+            <option value="hai_long">😊 Hài lòng</option>
+            <option value="binh_thuong">😐 Bình thường</option>
+            <option value="khieu_nai">⚠️ Khiếu nại</option>
+          </select>
+        </label>
+        <label>Khách nói gì<textarea id="fPhanHoi" placeholder="VD: form đẹp, muốn đặt thêm 50 cái · vải nhăn ở eo"></textarea></label>
+      </div>
+      <label class="tick" id="khuHoanTat"><input type="checkbox" id="fHoanTat"> Đóng đơn (xong hết, cất khỏi bảng)</label>
       <label>Ghi chú<textarea id="fGhiChu"></textarea></label>
       <div class="khoi" id="khuLichSu"><h4>Đơn đã đi qua</h4><ul class="ls" id="lichSu"></ul></div>
       <p class="ghichu" id="quyen"></p>
@@ -151,8 +164,12 @@
 (function () {
   const SUPABASE_URL = "https://vulszpepubwjgjfxqbed.supabase.co";
   const SUPABASE_KEY = "sb_publishable_ov_B2wedxoZymZQ-j7DKxA_LOkRqXxl"; // khoá công khai, an toàn khi bảng đã bật RLS
-  const CHANG = ["", "C1 Khách hỏi", "C2 Hồ sơ đủ", "C3 Rập", "C4 May mẫu", "C5 Khách duyệt", "C6 Chuẩn bị (3 khoá)", "C7 Sản xuất", "C8 Giao + thu tiền"];
+  // 11 chặng Sếp chốt 09/11/2026
+  const CHANG = ["", "1 Nhận đơn", "2 Ra rập", "3 May mẫu", "4 Duyệt mẫu", "5 Lên đơn SX", "6 Đã cắt", "7 Đang may", "8 QC", "9 Bàn giao Sale", "10 Đã giao khách", "11 Phản hồi khách"];
+  const SO_CHANG = 11;
+  const CHANG_CAT = 6;        // muốn sang chặng này phải đủ 3 khoá
   const NGAY_DO = 3;
+  const HAI_LONG = { hai_long: "😊 Hài lòng", binh_thuong: "😐 Bình thường", khieu_nai: "⚠️ Khiếu nại" };
   const $ = (id) => document.getElementById(id);
   const CHAY_THU = new URLSearchParams(location.search).has("thu");
 
@@ -180,19 +197,20 @@
       { id: "u4", ma_nv: "NV004", ho_ten: "Tổ trưởng QC", phong_ban: "QC" }
     ];
     const ngay = (n) => new Date(Date.now() - n * 864e5).toISOString();
-    let id = 0; const mk = (o) => Object.assign({ id: "d" + (++id), san_pham: "", so_luong: null, dang_cho: "", han_giao: null, uu_tien: "P4", khoa_ky_thuat: false, khoa_vai: false, khoa_rap: false, da_thu_du: false, ghi_chu: "", tao_luc: ngay(10) }, o);
+    let id = 0; const mk = (o) => Object.assign({ id: "d" + (++id), san_pham: "", so_luong: null, dang_cho: "", han_giao: null, uu_tien: "P4", khoa_ky_thuat: false, khoa_vai: false, khoa_rap: false, da_thu_du: false, hoan_tat: false, phan_hoi: null, muc_hai_long: null, ghi_chu: "", tao_luc: ngay(10) }, o);
     let don = [
-      mk({ ma_don: "DH-001", ten_khach: "Shop mẫu A", san_pham: "Đầm lụa 2 dây", so_luong: 120, chang: 3, nguoi_giu: "u3", dang_cho: "Chờ khách gửi số đo vòng ngực", uu_tien: "P1", vao_chang_luc: ngay(5), han_giao: "2026-11-20" }),
-      mk({ ma_don: "DH-002", ten_khach: "Shop mẫu B", san_pham: "Áo sơ mi lụa", so_luong: 80, chang: 6, nguoi_giu: "u2", dang_cho: "Chờ vải về", uu_tien: "P2", khoa_ky_thuat: true, khoa_rap: true, vao_chang_luc: ngay(1) }),
+      mk({ ma_don: "DH-001", ten_khach: "Shop mẫu A", san_pham: "Đầm lụa 2 dây", so_luong: 120, chang: 2, nguoi_giu: "u3", dang_cho: "Chờ khách gửi số đo vòng ngực", uu_tien: "P1", vao_chang_luc: ngay(5), han_giao: "2026-11-20" }),
+      mk({ ma_don: "DH-002", ten_khach: "Shop mẫu B", san_pham: "Áo sơ mi lụa", so_luong: 80, chang: 5, nguoi_giu: "u2", dang_cho: "Chờ vải về", uu_tien: "P2", khoa_ky_thuat: true, khoa_rap: true, vao_chang_luc: ngay(1) }),
       mk({ ma_don: "DH-003", ten_khach: "Khách lạ C", san_pham: "Mẫu test", chang: 1, nguoi_giu: "u2", uu_tien: "P4", vao_chang_luc: ngay(0) }),
-      mk({ ma_don: "DH-004", ten_khach: "Shop mẫu D", san_pham: "Quần suông", so_luong: 200, chang: 8, nguoi_giu: "u1", dang_cho: "Khách hẹn chuyển nốt 50%", uu_tien: "P0", vao_chang_luc: ngay(9), han_giao: "2026-11-01" }),
-      mk({ ma_don: "DH-005", ten_khach: "Shop mẫu E", san_pham: "Đầm suông", so_luong: 150, chang: 7, nguoi_giu: "u4", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, vao_chang_luc: ngay(2) })
+      mk({ ma_don: "DH-004", ten_khach: "Shop mẫu D", san_pham: "Quần suông", so_luong: 200, chang: 10, nguoi_giu: "u1", dang_cho: "Khách hẹn chuyển nốt 50%", uu_tien: "P0", vao_chang_luc: ngay(9), han_giao: "2026-11-01" }),
+      mk({ ma_don: "DH-005", ten_khach: "Shop mẫu E", san_pham: "Đầm suông", so_luong: 150, chang: 7, nguoi_giu: "u4", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, vao_chang_luc: ngay(2) }),
+      mk({ ma_don: "DH-006", ten_khach: "Shop mẫu F", san_pham: "Đầm lụa xoè", so_luong: 100, chang: 11, nguoi_giu: "u2", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, da_thu_du: true, muc_hai_long: "hai_long", phan_hoi: "Form đẹp, khách đặt thêm 50 cái", vao_chang_luc: ngay(1) })
     ];
     const ls = [];
     const doi = (o) => JSON.parse(JSON.stringify(o));
     function kiemKhoa(cu, moi) {
-      if (moi.chang >= 7 && (!cu || cu.chang < 7) && !(moi.khoa_ky_thuat && moi.khoa_vai && moi.khoa_rap))
-        throw new Error("Chưa đủ 3 khoá (bảng kỹ thuật · vải đã soi · rập + số đo) nên chưa vào Sản xuất được.");
+      if (moi.chang >= CHANG_CAT && (!cu || cu.chang < CHANG_CAT) && !(moi.khoa_ky_thuat && moi.khoa_vai && moi.khoa_rap))
+        throw new Error("Chưa đủ 3 khoá (bảng kỹ thuật · vải đã soi · rập + số đo) nên chưa cắt được.");
     }
     return {
       async phien() { return { user: { id: "u1" } }; },
@@ -227,7 +245,7 @@
   const duocSua = (d) => !d || laQuanLy() || d.nguoi_giu === toi.id;
   const soNgay = (d) => Math.max(0, Math.floor((Date.now() - new Date(d.vao_chang_luc).getTime()) / 864e5));
   const homNay = () => new Date().toISOString().slice(0, 10);
-  const treHan = (d) => d.han_giao && d.han_giao < homNay() && !d.da_thu_du;
+  const treHan = (d) => d.han_giao && d.han_giao < homNay() && d.chang < 10 && !d.hoan_tat;
   const ngayVN = (s) => s ? s.split("-").reverse().join("/") : "";
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -247,7 +265,7 @@
   function locDon() {
     const t = loc.tim.trim().toLowerCase();
     return dsDon.filter((d) => {
-      if (!loc.xong && d.da_thu_du) return false;
+      if (!loc.xong && d.hoan_tat) return false;
       if (loc.cuatoi && d.nguoi_giu !== toi.id) return false;
       if (loc.chamdo && soNgay(d) <= NGAY_DO) return false;
       if (t && ![d.ma_don, d.ten_khach, d.san_pham].join(" ").toLowerCase().includes(t)) return false;
@@ -257,16 +275,17 @@
 
   function ve() {
     const ds = locDon();
-    const conChay = dsDon.filter((d) => !d.da_thu_du);
+    const conChay = dsDon.filter((d) => !d.hoan_tat);
     const doCount = conChay.filter((d) => soNgay(d) > NGAY_DO).length;
     $("tom").innerHTML =
       `<span>Đang chạy <b>${conChay.length}</b></span>` +
       `<span class="do">Chấm đỏ <b>${doCount}</b></span>` +
       `<span>Trễ hạn <b>${conChay.filter(treHan).length}</b></span>` +
-      `<span>Chờ thu tiền <b>${conChay.filter((d) => d.chang === 8).length}</b></span>`;
+      `<span>Đã giao chưa thu đủ <b>${conChay.filter((d) => d.chang >= 10 && !d.da_thu_du).length}</b></span>` +
+      `<span>Khiếu nại <b>${conChay.filter((d) => d.muc_hai_long === "khieu_nai").length}</b></span>`;
 
     const bang = $("bang"); bang.innerHTML = "";
-    for (let c = 1; c <= 8; c++) {
+    for (let c = 1; c <= SO_CHANG; c++) {
       const trongCot = ds.filter((d) => d.chang === c)
         .sort((a, b) => a.uu_tien.localeCompare(b.uu_tien) || soNgay(b) - soNgay(a));
       const cot = document.createElement("section"); cot.className = "cot";
@@ -276,7 +295,9 @@
         const n = soNgay(d);
         const b = document.createElement("button"); b.type = "button";
         b.className = "the " + d.uu_tien + (d.nguoi_giu === toi.id ? " cuatoi" : "");
-        const khoa = c === 6 ? `<span class="khoa">Khoá ${[d.khoa_ky_thuat, d.khoa_vai, d.khoa_rap].filter(Boolean).length}/3</span>` : "";
+        const khoa = (c === CHANG_CAT - 1 ? `<span class="khoa">🔑 ${[d.khoa_ky_thuat, d.khoa_vai, d.khoa_rap].filter(Boolean).length}/3</span>` : "") +
+          (c >= 10 && !d.da_thu_du ? `<span class="trehan">Chưa thu đủ</span>` : "") +
+          (d.muc_hai_long ? `<span>${HAI_LONG[d.muc_hai_long]}</span>` : "");
         b.innerHTML =
           `<div class="dau"><span class="ma">${esc(d.ma_don)}</span><span class="p">${d.uu_tien}</span></div>` +
           `<div class="khach">${esc(d.ten_khach)}${d.san_pham ? " · " + esc(d.san_pham) : ""}${d.so_luong ? " · " + d.so_luong + " sp" : ""}</div>` +
@@ -294,7 +315,8 @@
   // ---------- Hộp đơn ----------
   function dienChon() {
     $("fGiu").innerHTML = '<option value="">Chưa giao</option>' + nhanVien.map((n) => `<option value="${n.id}">${esc(n.ho_ten)}${n.phong_ban ? " · " + esc(n.phong_ban) : ""}</option>`).join("");
-    $("fChang").innerHTML = CHANG.slice(1).map((t, i) => `<option value="${i + 1}">${t}</option>`).join("");
+    const opts = CHANG.slice(1).map((t, i) => `<option value="${i + 1}">${t}</option>`).join("");
+    $("fChang").innerHTML = opts; $("fNhay").innerHTML = opts;
   }
 
   function maMoi() {
@@ -320,6 +342,9 @@
     $("kVai").checked = !moi && d.khoa_vai;
     $("kRap").checked = !moi && d.khoa_rap;
     $("fThuDu").checked = !moi && d.da_thu_du;
+    $("fHaiLong").value = moi ? "" : (d.muc_hai_long || "");
+    $("fPhanHoi").value = moi ? "" : (d.phan_hoi || "");
+    $("fHoanTat").checked = !moi && d.hoan_tat;
     $("fGhiChu").value = moi ? "" : (d.ghi_chu || "");
     $("loiDon").textContent = "";
 
@@ -327,13 +352,15 @@
     $("khuChangMoi").classList.toggle("an", !moi);
     $("khuLichSu").classList.toggle("an", moi);
     const c = moi ? 1 : d.chang;
-    $("khuKhoa").classList.toggle("an", !moi && c < 5);
-    $("khuThu").classList.toggle("an", moi || c !== 8);
+    $("khuKhoa").classList.toggle("an", !moi && c < 4);
+    $("khuThu").classList.toggle("an", moi || c < 9);
+    $("khuPhanHoi").classList.toggle("an", moi || c < 10);
+    $("khuHoanTat").classList.toggle("an", moi || c < SO_CHANG);
     if (!moi) {
-      $("changHien").textContent = CHANG[c];
+      $("fNhay").value = String(c);
       $("nutLui").disabled = !sua || c === 1;
-      $("nutTien").disabled = !sua || c === 8;
-      $("nutTien").textContent = c < 8 ? "Sang " + CHANG[c + 1].split(" ")[0] + " ▶" : "Chặng cuối";
+      $("nutTien").disabled = !sua || c === SO_CHANG;
+      $("nutTien").textContent = c < SO_CHANG ? "Sang " + CHANG[c + 1].split(" ")[0] + " ▶" : "Chặng cuối";
     }
     $("formDon").querySelectorAll("input, select, textarea").forEach((el) => { el.disabled = !sua; });
     $("fMa").disabled = !moi && !laQuanLy();
@@ -365,6 +392,9 @@
       khoa_vai: $("kVai").checked,
       khoa_rap: $("kRap").checked,
       da_thu_du: $("fThuDu").checked,
+      muc_hai_long: $("fHaiLong").value || null,
+      phan_hoi: $("fPhanHoi").value.trim() || null,
+      hoan_tat: $("fHoanTat").checked,
       ghi_chu: $("fGhiChu").value.trim() || null
     };
   }
@@ -393,6 +423,11 @@
   $("nutDong").addEventListener("click", () => $("hopDon").close());
   $("nutTien").addEventListener("click", async () => { if (dangMo && await luu({ chang: dangMo.chang + 1 })) moDon(dangMo); });
   $("nutLui").addEventListener("click", async () => { if (dangMo && await luu({ chang: dangMo.chang - 1 })) moDon(dangMo); });
+  $("fNhay").addEventListener("change", async () => {
+    const den = parseInt($("fNhay").value, 10);
+    if (!dangMo || den === dangMo.chang) return;
+    if (await luu({ chang: den })) moDon(dangMo); else $("fNhay").value = String(dangMo.chang);
+  });
   $("nutTao").addEventListener("click", () => moDon(null));
   $("nutTai").addEventListener("click", taiLai);
   $("nutThoat").addEventListener("click", async () => { await db.thoat(); location.href = "/"; });

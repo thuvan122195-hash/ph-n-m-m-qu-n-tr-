@@ -1,5 +1,7 @@
 -- =====================================================================
--- VANSILK · BẢNG ĐƠN HÀNG CHUNG (8 chặng C1 → C8)
+-- VANSILK · BẢNG ĐƠN HÀNG CHUNG (11 chặng, Sếp chốt 09/11/2026)
+--  1 Nhận đơn · 2 Ra rập · 3 May mẫu · 4 Duyệt mẫu · 5 Lên đơn SX · 6 Đã cắt
+--  7 Đang may · 8 QC · 9 Bàn giao Sale · 10 Đã giao khách · 11 Phản hồi khách
 -- Cách chạy: Supabase → SQL Editor → New query → dán toàn bộ file → Run.
 -- Chạy lại nhiều lần cũng không hỏng (không xoá dữ liệu đã có).
 -- Cần sẵn bảng nhan_vien (id = id tài khoản đăng nhập, vai_tro, trang_thai).
@@ -44,7 +46,7 @@ create table if not exists public.don_hang (
   ten_khach      text not null,
   san_pham       text,
   so_luong       integer check (so_luong is null or so_luong >= 0),
-  chang          smallint not null default 1 check (chang between 1 and 8),
+  chang          smallint not null default 1,
   nguoi_giu      uuid references public.nhan_vien(id) on delete set null,
   dang_cho       text,
   han_giao       date,
@@ -52,13 +54,23 @@ create table if not exists public.don_hang (
   khoa_ky_thuat  boolean not null default false,  -- 🔑1 bảng kỹ thuật đã ký
   khoa_vai       boolean not null default false,  -- 🔑2 vải đã về kho, đã soi
   khoa_rap       boolean not null default false,  -- 🔑3 rập + số đo đã chốt
-  da_thu_du      boolean not null default false,  -- C8: tiền đã về đủ
+  da_thu_du      boolean not null default false,  -- tiền đã về đủ
   ghi_chu        text,
   vao_chang_luc  timestamptz not null default now(),
   tao_luc        timestamptz not null default now(),
   tao_boi        uuid default auth.uid(),
   sua_luc        timestamptz not null default now()
 );
+
+-- Cột thêm cho bản 11 chặng (chạy được cả khi bảng đã tạo từ bản 8 chặng)
+alter table public.don_hang add column if not exists hoan_tat boolean not null default false;  -- đóng đơn, cất khỏi bảng
+alter table public.don_hang add column if not exists phan_hoi text;                             -- lời khách phản hồi
+alter table public.don_hang add column if not exists muc_hai_long text;                         -- hai_long / binh_thuong / khieu_nai
+alter table public.don_hang drop constraint if exists don_hang_chang_check;
+alter table public.don_hang add constraint don_hang_chang_check check (chang between 1 and 11);
+alter table public.don_hang drop constraint if exists don_hang_muc_hai_long_check;
+alter table public.don_hang add constraint don_hang_muc_hai_long_check
+  check (muc_hai_long is null or muc_hai_long in ('hai_long','binh_thuong','khieu_nai'));
 
 -- 3) Nhật ký chuyển chặng (để đếm số liệu, KPI về sau)
 create table if not exists public.don_hang_lich_su (
@@ -73,7 +85,7 @@ create table if not exists public.don_hang_lich_su (
 create index if not exists don_hang_lich_su_don_idx on public.don_hang_lich_su (don_id);
 
 -- 4) Luật tự động
--- Cổng 1: chưa đủ 3 khoá thì không vào C7 Sản xuất.
+-- Cổng 1: chưa đủ 3 khoá thì không sang chặng 6 "Đã cắt" (khoá kiểm ở chặng 5 "Lên đơn SX").
 -- Đổi chặng thì tự đặt lại "ngày vào chặng" (để đếm số ngày đứng yên).
 create or replace function public.don_hang_truoc_luu() returns trigger
 language plpgsql security definer set search_path = public as $$
@@ -85,10 +97,10 @@ begin
   end if;
   if tg_op = 'INSERT' or new.chang is distinct from old.chang then
     new.vao_chang_luc := now();
-    if new.chang >= 7
-       and (tg_op = 'INSERT' or old.chang < 7)
+    if new.chang >= 6
+       and (tg_op = 'INSERT' or old.chang < 6)
        and not (new.khoa_ky_thuat and new.khoa_vai and new.khoa_rap) then
-      raise exception 'Chưa đủ 3 khoá (bảng kỹ thuật · vải đã soi · rập + số đo) nên chưa vào Sản xuất được.';
+      raise exception 'Chưa đủ 3 khoá (bảng kỹ thuật · vải đã soi · rập + số đo) nên chưa cắt được.';
     end if;
   end if;
   return new;
