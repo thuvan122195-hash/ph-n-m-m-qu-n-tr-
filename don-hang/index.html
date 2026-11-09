@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>VANSILK – Bảng đơn hàng</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+  :root { --nen:#f6f1ea; --the:#ffffff; --chu:#2b2420; --phu:#8a7d72; --vien:#e6dcd0; --chinh:#8c2f39; --chinh-dam:#6f222b; --loi:#b3261e; --xanh:#2f6b4f; --vang:#b7791f; --cot:#efe7dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--nen); font-family:"Be Vietnam Pro", system-ui, sans-serif; color:var(--chu); font-size:14px; }
+  button, input, select, textarea { font:inherit; }
+  .an { display:none !important; }
+
+  header { position:sticky; top:0; z-index:5; background:var(--the); border-bottom:1px solid var(--vien); padding:10px 16px; display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between; }
+  .logo { font-family:"Playfair Display", serif; font-size:22px; letter-spacing:3px; color:var(--chinh); text-decoration:none; }
+  .toi { color:var(--phu); font-size:13px; }
+  .hang { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .nut { border:0; border-radius:10px; padding:9px 14px; background:var(--chinh); color:#fff; font-weight:600; cursor:pointer; min-height:40px; }
+  .nut:hover { background:var(--chinh-dam); }
+  .nut.phu { background:transparent; color:var(--chinh); border:1px solid var(--vien); }
+  .nut.phu:hover { background:#faf5ef; }
+  .nut:disabled { opacity:.5; cursor:not-allowed; }
+
+  .loc { padding:10px 16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .chip { border:1px solid var(--vien); background:var(--the); border-radius:99px; padding:6px 12px; cursor:pointer; color:var(--chu); min-height:34px; }
+  .chip[aria-pressed="true"] { background:var(--chinh); color:#fff; border-color:var(--chinh); }
+  .tom { margin-left:auto; display:flex; gap:12px; flex-wrap:wrap; color:var(--phu); font-size:13px; }
+  .tom b { color:var(--chu); }
+  .tom .do b { color:var(--loi); }
+  .tim { padding:8px 12px; border:1px solid var(--vien); border-radius:99px; background:var(--the); min-width:180px; }
+
+  .bang { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px, 1fr); gap:12px; padding:4px 16px 24px; overflow-x:auto; align-items:start; }
+  .cot { background:var(--cot); border-radius:12px; padding:10px; min-height:120px; display:grid; gap:8px; align-content:start; }
+  .cot h2 { margin:0 2px 4px; font-size:13px; font-weight:700; display:flex; justify-content:space-between; gap:8px; }
+  .cot h2 small { color:var(--phu); font-weight:600; }
+  .cot .rong { color:var(--phu); font-size:12px; text-align:center; padding:12px 0; }
+
+  .the { background:var(--the); border:1px solid var(--vien); border-left:4px solid var(--vien); border-radius:10px; padding:10px 12px; display:grid; gap:4px; cursor:pointer; text-align:left; color:inherit; width:100%; }
+  .the:hover { border-color:#d4c4b2; }
+  .the.P0 { border-left-color:#8c2f39; } .the.P1 { border-left-color:#c05621; } .the.P2 { border-left-color:#b7791f; } .the.P3 { border-left-color:#2f6b4f; } .the.P4 { border-left-color:#a0aec0; }
+  .the .dau { display:flex; justify-content:space-between; gap:8px; align-items:start; }
+  .the .ma { font-weight:700; }
+  .the .khach { color:var(--phu); font-size:13px; }
+  .the .cho { font-size:13px; }
+  .the .duoi { display:flex; flex-wrap:wrap; gap:6px 10px; font-size:12px; color:var(--phu); }
+  .the .cuatoi { outline:2px solid rgba(140,47,57,.25); }
+  .p { font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:#f3e6e8; color:var(--chinh); white-space:nowrap; }
+  .chamdo { display:inline-flex; align-items:center; gap:4px; color:var(--loi); font-weight:700; }
+  .chamdo::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--loi); }
+  .trehan { color:var(--loi); font-weight:600; }
+  .khoa { font-size:12px; }
+
+  dialog { border:0; border-radius:16px; padding:0; width:min(560px, calc(100vw - 24px)); max-height:calc(100vh - 24px); box-shadow:0 20px 60px rgba(0,0,0,.25); color:var(--chu); }
+  dialog::backdrop { background:rgba(40,30,25,.45); }
+  .hop { padding:20px; display:grid; gap:14px; }
+  .hop h3 { margin:0; font-size:18px; }
+  .luoi { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px; }
+  label { display:grid; gap:5px; font-size:13px; font-weight:600; min-width:0; }
+  input, select, textarea { width:100%; padding:10px 12px; border:1px solid var(--vien); border-radius:10px; background:#fff; color:var(--chu); font-size:15px; font-weight:400; }
+  textarea { min-height:64px; resize:vertical; }
+  input:disabled, select:disabled, textarea:disabled { background:#f7f3ee; color:var(--phu); }
+  .khoi { border:1px solid var(--vien); border-radius:12px; padding:12px; display:grid; gap:8px; }
+  .khoi h4 { margin:0; font-size:13px; }
+  .tick { display:flex; gap:8px; align-items:center; font-weight:500; }
+  .tick input { width:20px; height:20px; }
+  .chuyen { display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#faf5ef; border-radius:12px; padding:10px 12px; }
+  .chuyen .giua { font-weight:700; }
+  .loi { color:var(--loi); font-size:13px; min-height:18px; }
+  .ls { list-style:none; margin:0; padding:0; display:grid; gap:4px; font-size:12px; color:var(--phu); max-height:140px; overflow:auto; }
+  .cuoi { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+  .ghichu { font-size:12px; color:var(--phu); }
+  .bao { position:fixed; left:50%; bottom:16px; transform:translateX(-50%); background:var(--chu); color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; max-width:calc(100vw - 32px); }
+  .thu { background:#fff4d6; border-bottom:1px solid #e9c46a; padding:8px 16px; font-size:13px; }
+  .giua-trang { padding:60px 16px; text-align:center; color:var(--phu); }
+</style>
+</head>
+<body>
+  <div id="thanhThu" class="thu an">Đang xem <b>bản chạy thử</b> với đơn mẫu, không lưu vào hệ thống.</div>
+  <header>
+    <div class="hang">
+      <a class="logo" href="/">VANSILK</a>
+      <span class="toi" id="toi"></span>
+    </div>
+    <div class="hang">
+      <button class="nut" id="nutTao" type="button">+ Đơn mới</button>
+      <button class="nut phu" id="nutTai" type="button">Tải lại</button>
+      <button class="nut phu" id="nutThoat" type="button">Đăng xuất</button>
+    </div>
+  </header>
+
+  <div class="loc" id="thanhLoc">
+    <button class="chip" type="button" data-loc="cuatoi" aria-pressed="false">Đơn tôi giữ</button>
+    <button class="chip" type="button" data-loc="chamdo" aria-pressed="false">Chỉ đơn chấm đỏ</button>
+    <button class="chip" type="button" data-loc="xong" aria-pressed="false">Hiện đơn đã thu đủ</button>
+    <input class="tim" id="tim" type="search" placeholder="Tìm mã đơn, khách, sản phẩm">
+    <div class="tom" id="tom"></div>
+  </div>
+
+  <main class="bang" id="bang"></main>
+  <div class="giua-trang an" id="dangTai">Đang tải bảng đơn…</div>
+
+  <dialog id="hopDon">
+    <form class="hop" id="formDon" method="dialog">
+      <h3 id="tieuDe">Đơn hàng</h3>
+      <div class="chuyen" id="khuChuyen">
+        <button class="nut phu" type="button" id="nutLui">◀ Lùi</button>
+        <span class="giua" id="changHien"></span>
+        <button class="nut" type="button" id="nutTien">Chuyển tiếp ▶</button>
+      </div>
+      <div class="luoi">
+        <label>Mã đơn<input id="fMa" required></label>
+        <label>Tên khách<input id="fKhach" required></label>
+        <label>Sản phẩm / mã hàng<input id="fSanPham"></label>
+        <label>Số lượng<input id="fSoLuong" type="number" min="0" inputmode="numeric"></label>
+        <label>Người đang giữ<select id="fGiu"></select></label>
+        <label>Ưu tiên
+          <select id="fUuTien">
+            <option value="P0">P0 · Hàng xong, chưa thu tiền</option>
+            <option value="P1">P1 · Sửa rập nhỏ là cắt được</option>
+            <option value="P2">P2 · Đang SX bị chặn</option>
+            <option value="P3">P3 · Khách cũ đã cam kết</option>
+            <option value="P4">P4 · Mẫu khách lạ, chưa cam kết</option>
+          </select>
+        </label>
+        <label>Hạn khách cần hàng<input id="fHan" type="date"></label>
+        <label id="khuChangMoi">Chặng<select id="fChang"></select></label>
+      </div>
+      <label>Đang chờ cái gì<input id="fCho" placeholder="VD: chờ khách gửi số đo, chờ vải về 15/11"></label>
+      <div class="khoi" id="khuKhoa">
+        <h4>3 khoá trước khi vào Sản xuất</h4>
+        <label class="tick"><input type="checkbox" id="kKyThuat"> 🔑 Bảng kỹ thuật đã có, đã ký</label>
+        <label class="tick"><input type="checkbox" id="kVai"> 🔑 Vải đã về kho, đã soi, đủ số mét</label>
+        <label class="tick"><input type="checkbox" id="kRap"> 🔑 Rập + số đo đã chốt (khách duyệt)</label>
+      </div>
+      <label class="tick" id="khuThu"><input type="checkbox" id="fThuDu"> Tiền đã về đủ (đơn rời khỏi bảng)</label>
+      <label>Ghi chú<textarea id="fGhiChu"></textarea></label>
+      <div class="khoi" id="khuLichSu"><h4>Đơn đã đi qua</h4><ul class="ls" id="lichSu"></ul></div>
+      <p class="ghichu" id="quyen"></p>
+      <p class="loi" id="loiDon"></p>
+      <div class="cuoi">
+        <button class="nut phu" type="button" id="nutDong">Đóng</button>
+        <button class="nut" type="submit" id="nutLuu">Lưu</button>
+      </div>
+    </form>
+  </dialog>
+
+<script>
+(function () {
+  const SUPABASE_URL = "https://vulszpepubwjgjfxqbed.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_ov_B2wedxoZymZQ-j7DKxA_LOkRqXxl"; // khoá công khai, an toàn khi bảng đã bật RLS
+  const CHANG = ["", "C1 Khách hỏi", "C2 Hồ sơ đủ", "C3 Rập", "C4 May mẫu", "C5 Khách duyệt", "C6 Chuẩn bị (3 khoá)", "C7 Sản xuất", "C8 Giao + thu tiền"];
+  const NGAY_DO = 3;
+  const $ = (id) => document.getElementById(id);
+  const CHAY_THU = new URLSearchParams(location.search).has("thu");
+
+  // ---------- Lớp dữ liệu: thật (Supabase) hoặc chạy thử (dữ liệu mẫu trong máy) ----------
+  function dbThat() {
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const tra = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
+    return {
+      async phien() { const { data } = await sb.auth.getSession(); return data.session; },
+      async toi(uid) { return tra(await sb.from("nhan_vien").select("id, ma_nv, ho_ten, phong_ban, chuc_vu, vai_tro, trang_thai").eq("id", uid).maybeSingle()); },
+      async dsNhanVien() { return tra(await sb.rpc("ds_nhan_vien")) || []; },
+      async dsDon() { return tra(await sb.from("don_hang").select("*").order("tao_luc", { ascending: true })) || []; },
+      async tao(row) { return tra(await sb.from("don_hang").insert(row).select().single()); },
+      async sua(id, patch) { return tra(await sb.from("don_hang").update(patch).eq("id", id).select().single()); },
+      async lichSu(id) { return tra(await sb.from("don_hang_lich_su").select("*").eq("don_id", id).order("luc", { ascending: false })) || []; },
+      async thoat() { await sb.auth.signOut(); }
+    };
+  }
+
+  function dbThu() {
+    const nv = [
+      { id: "u1", ma_nv: "NV001", ho_ten: "Lê Thị Thu Vân", phong_ban: "Ban Giám đốc" },
+      { id: "u2", ma_nv: "NV002", ho_ten: "Quỳnh", phong_ban: "Kinh doanh" },
+      { id: "u3", ma_nv: "NV003", ho_ten: "Thợ rập", phong_ban: "Phòng mẫu" },
+      { id: "u4", ma_nv: "NV004", ho_ten: "Tổ trưởng QC", phong_ban: "QC" }
+    ];
+    const ngay = (n) => new Date(Date.now() - n * 864e5).toISOString();
+    let id = 0; const mk = (o) => Object.assign({ id: "d" + (++id), san_pham: "", so_luong: null, dang_cho: "", han_giao: null, uu_tien: "P4", khoa_ky_thuat: false, khoa_vai: false, khoa_rap: false, da_thu_du: false, ghi_chu: "", tao_luc: ngay(10) }, o);
+    let don = [
+      mk({ ma_don: "DH-001", ten_khach: "Shop mẫu A", san_pham: "Đầm lụa 2 dây", so_luong: 120, chang: 3, nguoi_giu: "u3", dang_cho: "Chờ khách gửi số đo vòng ngực", uu_tien: "P1", vao_chang_luc: ngay(5), han_giao: "2026-11-20" }),
+      mk({ ma_don: "DH-002", ten_khach: "Shop mẫu B", san_pham: "Áo sơ mi lụa", so_luong: 80, chang: 6, nguoi_giu: "u2", dang_cho: "Chờ vải về", uu_tien: "P2", khoa_ky_thuat: true, khoa_rap: true, vao_chang_luc: ngay(1) }),
+      mk({ ma_don: "DH-003", ten_khach: "Khách lạ C", san_pham: "Mẫu test", chang: 1, nguoi_giu: "u2", uu_tien: "P4", vao_chang_luc: ngay(0) }),
+      mk({ ma_don: "DH-004", ten_khach: "Shop mẫu D", san_pham: "Quần suông", so_luong: 200, chang: 8, nguoi_giu: "u1", dang_cho: "Khách hẹn chuyển nốt 50%", uu_tien: "P0", vao_chang_luc: ngay(9), han_giao: "2026-11-01" }),
+      mk({ ma_don: "DH-005", ten_khach: "Shop mẫu E", san_pham: "Đầm suông", so_luong: 150, chang: 7, nguoi_giu: "u4", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, vao_chang_luc: ngay(2) })
+    ];
+    const ls = [];
+    const doi = (o) => JSON.parse(JSON.stringify(o));
+    function kiemKhoa(cu, moi) {
+      if (moi.chang >= 7 && (!cu || cu.chang < 7) && !(moi.khoa_ky_thuat && moi.khoa_vai && moi.khoa_rap))
+        throw new Error("Chưa đủ 3 khoá (bảng kỹ thuật · vải đã soi · rập + số đo) nên chưa vào Sản xuất được.");
+    }
+    return {
+      async phien() { return { user: { id: "u1" } }; },
+      async toi() { return { id: "u1", ma_nv: "NV001", ho_ten: "Lê Thị Thu Vân", phong_ban: "Ban Giám đốc", chuc_vu: "Giám đốc", vai_tro: "admin", trang_thai: "dang_lam" }; },
+      async dsNhanVien() { return doi(nv); },
+      async dsDon() { return doi(don); },
+      async tao(row) {
+        if (don.some((d) => d.ma_don === row.ma_don)) throw new Error('duplicate key value violates unique constraint "don_hang_ma_don_key"');
+        const moi = mk(Object.assign({}, row, { vao_chang_luc: new Date().toISOString(), tao_luc: new Date().toISOString() }));
+        kiemKhoa(null, moi); don.push(moi);
+        ls.push({ don_id: moi.id, tu_chang: null, den_chang: moi.chang, nguoi: "u1", luc: new Date().toISOString(), ghi_chu: "Tạo đơn" });
+        return doi(moi);
+      },
+      async sua(idDon, patch) {
+        const cu = don.find((d) => d.id === idDon); const moi = Object.assign({}, cu, patch);
+        kiemKhoa(cu, moi);
+        if (moi.chang !== cu.chang) { moi.vao_chang_luc = new Date().toISOString(); ls.push({ don_id: idDon, tu_chang: cu.chang, den_chang: moi.chang, nguoi: "u1", luc: moi.vao_chang_luc }); }
+        Object.assign(cu, moi); return doi(cu);
+      },
+      async lichSu(idDon) { return doi(ls.filter((x) => x.don_id === idDon).reverse()); },
+      async thoat() { location.href = "/"; }
+    };
+  }
+
+  const db = CHAY_THU ? dbThu() : dbThat();
+
+  // ---------- Trạng thái ----------
+  let toi = null, nhanVien = [], dsDon = [], dangMo = null;
+  const loc = { cuatoi: false, chamdo: false, xong: false, tim: "" };
+  const tenNV = (id) => (nhanVien.find((n) => n.id === id) || {}).ho_ten || "Chưa giao";
+  const laQuanLy = () => toi && (toi.vai_tro === "admin" || toi.vai_tro === "quan_ly");
+  const duocSua = (d) => !d || laQuanLy() || d.nguoi_giu === toi.id;
+  const soNgay = (d) => Math.max(0, Math.floor((Date.now() - new Date(d.vao_chang_luc).getTime()) / 864e5));
+  const homNay = () => new Date().toISOString().slice(0, 10);
+  const treHan = (d) => d.han_giao && d.han_giao < homNay() && !d.da_thu_du;
+  const ngayVN = (s) => s ? s.split("-").reverse().join("/") : "";
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function bao(msg) {
+    const el = document.createElement("div"); el.className = "bao"; el.textContent = msg;
+    document.body.appendChild(el); setTimeout(() => el.remove(), 3200);
+  }
+  function loiDe(e) {
+    const m = (e && e.message) || String(e);
+    if (/duplicate key|unique/i.test(m)) return "Mã đơn này đã có rồi, chị đặt mã khác.";
+    if (/row-level security|permission|policy/i.test(m)) return "Chị không có quyền sửa đơn này (chỉ người đang giữ đơn hoặc Quản lý mới sửa được).";
+    if (/does not exist|schema cache/i.test(m)) return "Hệ thống chưa có bảng đơn hàng. Cần chạy đoạn lệnh tạo bảng trên Supabase một lần.";
+    return m;
+  }
+
+  // ---------- Vẽ bảng ----------
+  function locDon() {
+    const t = loc.tim.trim().toLowerCase();
+    return dsDon.filter((d) => {
+      if (!loc.xong && d.da_thu_du) return false;
+      if (loc.cuatoi && d.nguoi_giu !== toi.id) return false;
+      if (loc.chamdo && soNgay(d) <= NGAY_DO) return false;
+      if (t && ![d.ma_don, d.ten_khach, d.san_pham].join(" ").toLowerCase().includes(t)) return false;
+      return true;
+    });
+  }
+
+  function ve() {
+    const ds = locDon();
+    const conChay = dsDon.filter((d) => !d.da_thu_du);
+    const doCount = conChay.filter((d) => soNgay(d) > NGAY_DO).length;
+    $("tom").innerHTML =
+      `<span>Đang chạy <b>${conChay.length}</b></span>` +
+      `<span class="do">Chấm đỏ <b>${doCount}</b></span>` +
+      `<span>Trễ hạn <b>${conChay.filter(treHan).length}</b></span>` +
+      `<span>Chờ thu tiền <b>${conChay.filter((d) => d.chang === 8).length}</b></span>`;
+
+    const bang = $("bang"); bang.innerHTML = "";
+    for (let c = 1; c <= 8; c++) {
+      const trongCot = ds.filter((d) => d.chang === c)
+        .sort((a, b) => a.uu_tien.localeCompare(b.uu_tien) || soNgay(b) - soNgay(a));
+      const cot = document.createElement("section"); cot.className = "cot";
+      cot.innerHTML = `<h2>${CHANG[c]} <small>${trongCot.length}</small></h2>`;
+      if (!trongCot.length) cot.insertAdjacentHTML("beforeend", '<div class="rong">Trống</div>');
+      trongCot.forEach((d) => {
+        const n = soNgay(d);
+        const b = document.createElement("button"); b.type = "button";
+        b.className = "the " + d.uu_tien + (d.nguoi_giu === toi.id ? " cuatoi" : "");
+        const khoa = c === 6 ? `<span class="khoa">Khoá ${[d.khoa_ky_thuat, d.khoa_vai, d.khoa_rap].filter(Boolean).length}/3</span>` : "";
+        b.innerHTML =
+          `<div class="dau"><span class="ma">${esc(d.ma_don)}</span><span class="p">${d.uu_tien}</span></div>` +
+          `<div class="khach">${esc(d.ten_khach)}${d.san_pham ? " · " + esc(d.san_pham) : ""}${d.so_luong ? " · " + d.so_luong + " sp" : ""}</div>` +
+          (d.dang_cho ? `<div class="cho">⏳ ${esc(d.dang_cho)}</div>` : "") +
+          `<div class="duoi"><span>👤 ${esc(tenNV(d.nguoi_giu))}</span>` +
+          (n > NGAY_DO ? `<span class="chamdo">${n} ngày đứng yên</span>` : `<span>${n} ngày ở chặng</span>`) +
+          (d.han_giao ? `<span class="${treHan(d) ? "trehan" : ""}">Hạn ${ngayVN(d.han_giao)}</span>` : "") + khoa + `</div>`;
+        b.addEventListener("click", () => moDon(d));
+        cot.appendChild(b);
+      });
+      bang.appendChild(cot);
+    }
+  }
+
+  // ---------- Hộp đơn ----------
+  function dienChon() {
+    $("fGiu").innerHTML = '<option value="">Chưa giao</option>' + nhanVien.map((n) => `<option value="${n.id}">${esc(n.ho_ten)}${n.phong_ban ? " · " + esc(n.phong_ban) : ""}</option>`).join("");
+    $("fChang").innerHTML = CHANG.slice(1).map((t, i) => `<option value="${i + 1}">${t}</option>`).join("");
+  }
+
+  function maMoi() {
+    const d = new Date(), p = (x) => String(x).padStart(2, "0");
+    return "DH" + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes());
+  }
+
+  async function moDon(d) {
+    dangMo = d || null;
+    const moi = !d;
+    const sua = duocSua(d);
+    $("tieuDe").textContent = moi ? "Đơn mới" : "Đơn " + d.ma_don;
+    $("fMa").value = moi ? maMoi() : d.ma_don;
+    $("fKhach").value = moi ? "" : d.ten_khach;
+    $("fSanPham").value = moi ? "" : (d.san_pham || "");
+    $("fSoLuong").value = moi ? "" : (d.so_luong ?? "");
+    $("fGiu").value = moi ? toi.id : (d.nguoi_giu || "");
+    $("fUuTien").value = moi ? "P4" : d.uu_tien;
+    $("fHan").value = moi ? "" : (d.han_giao || "");
+    $("fChang").value = "1";
+    $("fCho").value = moi ? "" : (d.dang_cho || "");
+    $("kKyThuat").checked = !moi && d.khoa_ky_thuat;
+    $("kVai").checked = !moi && d.khoa_vai;
+    $("kRap").checked = !moi && d.khoa_rap;
+    $("fThuDu").checked = !moi && d.da_thu_du;
+    $("fGhiChu").value = moi ? "" : (d.ghi_chu || "");
+    $("loiDon").textContent = "";
+
+    $("khuChuyen").classList.toggle("an", moi);
+    $("khuChangMoi").classList.toggle("an", !moi);
+    $("khuLichSu").classList.toggle("an", moi);
+    const c = moi ? 1 : d.chang;
+    $("khuKhoa").classList.toggle("an", !moi && c < 5);
+    $("khuThu").classList.toggle("an", moi || c !== 8);
+    if (!moi) {
+      $("changHien").textContent = CHANG[c];
+      $("nutLui").disabled = !sua || c === 1;
+      $("nutTien").disabled = !sua || c === 8;
+      $("nutTien").textContent = c < 8 ? "Sang " + CHANG[c + 1].split(" ")[0] + " ▶" : "Chặng cuối";
+    }
+    $("formDon").querySelectorAll("input, select, textarea").forEach((el) => { el.disabled = !sua; });
+    $("fMa").disabled = !moi && !laQuanLy();
+    $("nutLuu").classList.toggle("an", !sua);
+    $("quyen").textContent = sua ? "" : "Chị đang xem. Chỉ người đang giữ đơn hoặc Quản lý mới sửa được đơn này.";
+    $("hopDon").showModal();
+
+    if (!moi) {
+      $("lichSu").innerHTML = "<li>Đang tải…</li>";
+      try {
+        const ls = await db.lichSu(d.id);
+        $("lichSu").innerHTML = ls.length ? ls.map((x) => `<li>${new Date(x.luc).toLocaleString("vi-VN")} · ${x.tu_chang ? CHANG[x.tu_chang].split(" ")[0] + " → " : ""}${CHANG[x.den_chang]} · ${esc(tenNV(x.nguoi))}${x.ghi_chu ? " · " + esc(x.ghi_chu) : ""}</li>`).join("") : "<li>Chưa có</li>";
+      } catch (e) { $("lichSu").innerHTML = "<li>Không tải được</li>"; }
+    }
+  }
+
+  function docForm() {
+    const sl = $("fSoLuong").value;
+    return {
+      ma_don: $("fMa").value.trim(),
+      ten_khach: $("fKhach").value.trim(),
+      san_pham: $("fSanPham").value.trim() || null,
+      so_luong: sl === "" ? null : parseInt(sl, 10),
+      nguoi_giu: $("fGiu").value || null,
+      uu_tien: $("fUuTien").value,
+      han_giao: $("fHan").value || null,
+      dang_cho: $("fCho").value.trim() || null,
+      khoa_ky_thuat: $("kKyThuat").checked,
+      khoa_vai: $("kVai").checked,
+      khoa_rap: $("kRap").checked,
+      da_thu_du: $("fThuDu").checked,
+      ghi_chu: $("fGhiChu").value.trim() || null
+    };
+  }
+
+  async function luu(patchThem) {
+    const f = docForm();
+    if (!f.ma_don || !f.ten_khach) { $("loiDon").textContent = "Cần có mã đơn và tên khách."; return false; }
+    $("nutLuu").disabled = true; $("loiDon").textContent = "";
+    try {
+      if (!dangMo) {
+        f.chang = parseInt($("fChang").value, 10);
+        const moi = await db.tao(f); dsDon.push(moi); bao("Đã tạo đơn " + moi.ma_don);
+      } else {
+        const patch = Object.assign(f, patchThem || {});
+        if (!laQuanLy()) delete patch.ma_don;
+        const moi = await db.sua(dangMo.id, patch);
+        dsDon = dsDon.map((x) => (x.id === moi.id ? moi : x)); dangMo = moi;
+        bao(patchThem && patchThem.chang ? "Đã chuyển " + moi.ma_don + " sang " + CHANG[moi.chang] : "Đã lưu " + moi.ma_don);
+      }
+      ve(); return true;
+    } catch (e) { $("loiDon").textContent = loiDe(e); return false; }
+    finally { $("nutLuu").disabled = false; }
+  }
+
+  $("formDon").addEventListener("submit", async (e) => { e.preventDefault(); if (await luu()) $("hopDon").close(); });
+  $("nutDong").addEventListener("click", () => $("hopDon").close());
+  $("nutTien").addEventListener("click", async () => { if (dangMo && await luu({ chang: dangMo.chang + 1 })) moDon(dangMo); });
+  $("nutLui").addEventListener("click", async () => { if (dangMo && await luu({ chang: dangMo.chang - 1 })) moDon(dangMo); });
+  $("nutTao").addEventListener("click", () => moDon(null));
+  $("nutTai").addEventListener("click", taiLai);
+  $("nutThoat").addEventListener("click", async () => { await db.thoat(); location.href = "/"; });
+  $("thanhLoc").querySelectorAll("[data-loc]").forEach((b) => b.addEventListener("click", () => {
+    loc[b.dataset.loc] = !loc[b.dataset.loc]; b.setAttribute("aria-pressed", String(loc[b.dataset.loc])); ve();
+  }));
+  $("tim").addEventListener("input", (e) => { loc.tim = e.target.value; ve(); });
+
+  async function taiLai() {
+    try { [nhanVien, dsDon] = await Promise.all([db.dsNhanVien(), db.dsDon()]); dienChon(); ve(); }
+    catch (e) { $("bang").innerHTML = `<div class="giua-trang">${esc(loiDe(e))}</div>`; }
+  }
+
+  async function batDau() {
+    $("thanhThu").classList.toggle("an", !CHAY_THU);
+    $("dangTai").classList.remove("an");
+    const phien = await db.phien();
+    if (!phien) { location.href = "/"; return; }
+    try { toi = await db.toi(phien.user.id); } catch (e) { toi = null; }
+    if (!toi || toi.trang_thai !== "dang_lam") { location.href = "/"; return; }
+    $("toi").textContent = toi.ho_ten + " · " + ({ admin: "Quản trị", quan_ly: "Quản lý", nhan_vien: "Nhân viên" }[toi.vai_tro] || toi.vai_tro);
+    await taiLai();
+    $("dangTai").classList.add("an");
+    setInterval(() => { if (!$("hopDon").open) taiLai(); }, 60000);
+  }
+  batDau();
+})();
+</script>
+</body>
+</html>
