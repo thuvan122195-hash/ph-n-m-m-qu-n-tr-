@@ -218,6 +218,7 @@
       <p class="ghichu" id="quyen"></p>
       <p class="loi" id="loiDon"></p>
       <div class="cuoi">
+        <button class="nut phu xoa an" type="button" id="nutXoa" style="margin-right:auto;color:#b42318;border-color:#f3b4ae">Xoá đơn</button>
         <button class="nut phu" type="button" id="nutDong">Đóng</button>
         <button class="nut" type="submit" id="nutLuu">Lưu</button>
       </div>
@@ -248,6 +249,7 @@
       async dsDon() { return tra(await sb.from("don_hang").select("*").order("tao_luc", { ascending: true })) || []; },
       async tao(row) { return tra(await sb.from("don_hang").insert(row).select().single()); },
       async sua(id, patch) { return tra(await sb.from("don_hang").update(patch).eq("id", id).select().single()); },
+      async xoa(id) { const r = tra(await sb.from("don_hang").delete().eq("id", id).select()); if (!r || !r.length) throw new Error("Không xoá được: chỉ Quản trị mới xoá đơn."); },
       async lichSu(id) { return tra(await sb.from("don_hang_lich_su").select("*").eq("don_id", id).order("luc", { ascending: false })) || []; },
       async dsVeTinh() { try { return tra(await sb.from("ve_tinh").select("*").order("ten")) || []; } catch (e) { return []; } },
       async taoVeTinh(row) { return tra(await sb.from("ve_tinh").insert(row).select().single()); },
@@ -319,6 +321,7 @@
         if (moi.chang !== cu.chang) { moi.vao_chang_luc = new Date().toISOString(); ls.push({ don_id: idDon, tu_chang: cu.chang, den_chang: moi.chang, nguoi: "u1", luc: moi.vao_chang_luc }); }
         Object.assign(cu, moi); return doi(cu);
       },
+      async xoa(idDon) { const i = don.findIndex((d) => d.id === idDon); if (i >= 0) don.splice(i, 1); return doi(true); },
       async lichSu(idDon) { return doi(ls.filter((x) => x.don_id === idDon).reverse()); },
       async dsVeTinh() { return doi(vt); },
       async taoVeTinh(row) { const r = Object.assign({ id: "v" + (vt.length + 1), dang_lam: true }, row); vt.push(r); return doi(r); },
@@ -493,6 +496,7 @@
     $("formDon").querySelectorAll("input, select, textarea").forEach((el) => { if (!el.closest("#khuGiaoMay")) el.disabled = !sua; });
     $("fMa").disabled = !moi && !laQuanLy();
     $("nutLuu").classList.toggle("an", !sua);
+    $("nutXoa").classList.toggle("an", moi || !toi || toi.vai_tro !== "admin");
     $("quyen").textContent = sua ? "" : "Chị đang xem. Chỉ người đang giữ đơn hoặc Quản lý mới sửa được đơn này.";
     $("hopDon").showModal();
 
@@ -693,6 +697,19 @@
 
   $("formDon").addEventListener("submit", async (e) => { e.preventDefault(); if (await luu()) $("hopDon").close(); });
   $("nutDong").addEventListener("click", () => $("hopDon").close());
+  $("nutXoa").addEventListener("click", async () => {
+    if (!dangMo) return;
+    if (giaoMay.some((x) => x.don_id === dangMo.id)) {
+      $("loiDon").textContent = "Đơn này đã giao cho vệ tinh nên không xoá được (sẽ mất số tiền gia công). Nếu đơn huỷ, chị tick «Đóng đơn» để cất đi.";
+      return;
+    }
+    if (!confirm("Xoá hẳn đơn " + dangMo.ma_don + " – " + (dangMo.ten_khach || "") + "? Xoá rồi không lấy lại được.")) return;
+    try {
+      await db.xoa(dangMo.id);
+      dsDon = dsDon.filter((x) => x.id !== dangMo.id);
+      $("hopDon").close(); ve(); bao("Đã xoá đơn " + dangMo.ma_don + (CHAY_THU ? " (bản chạy thử)" : ""));
+    } catch (e) { $("loiDon").textContent = loiDe(e); }
+  });
   $("nutTien").addEventListener("click", async () => { if (dangMo && await luu({ chang: dangMo.chang + 1 })) moDon(dangMo); });
   $("nutLui").addEventListener("click", async () => { if (dangMo && await luu({ chang: dangMo.chang - 1 })) moDon(dangMo); });
   $("fNhay").addEventListener("change", async () => {
