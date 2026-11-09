@@ -74,6 +74,14 @@
   .gmds li .tren { display:flex; justify-content:space-between; gap:8px; font-weight:600; }
   .gmds li .so { color:var(--phu); font-size:12px; }
   .gmds li button { justify-self:start; border:0; background:none; color:var(--chinh); font-weight:600; padding:4px 0; cursor:pointer; }
+  .gmds li .hang { display:flex; gap:14px; flex-wrap:wrap; }
+  .cuonqc { overflow-x:auto; }
+  .qct { border-collapse:collapse; font-size:12px; margin:4px 0; min-width:360px; }
+  .qct th, .qct td { padding:3px 8px; border-bottom:1px solid var(--vien); text-align:right; }
+  .qct th:nth-child(-n+2), .qct td:nth-child(-n+2) { text-align:left; }
+  .qct th { color:var(--phu); font-weight:600; }
+  .qct tr.tong td { font-weight:700; border-top:1px solid var(--chu); }
+  .qct td.so { text-align:left; }
   .gmform { border-top:1px dashed var(--vien); padding-top:10px; display:grid; gap:10px; }
   .datra { color:var(--xanh); font-weight:600; }
   .ls { list-style:none; margin:0; padding:0; display:grid; gap:4px; font-size:12px; color:var(--phu); max-height:140px; overflow:auto; }
@@ -123,6 +131,8 @@
         <label>Tên khách<input id="fKhach" required></label>
         <label>Sản phẩm / mã hàng<input id="fSanPham"></label>
         <label>Số lượng<input id="fSoLuong" type="number" min="0" inputmode="numeric"></label>
+        <label>Đơn giá gia công / cái (đồng)<input id="fGiaGC" type="number" min="0" step="500" inputmode="numeric" placeholder="VD: 28000"></label>
+        <p class="ghichu" id="fTienGC" style="grid-column:1/-1;margin:-4px 0 0"></p>
         <label>Người đang giữ<select id="fGiu"></select></label>
         <label>Ưu tiên
           <select id="fUuTien">
@@ -153,16 +163,30 @@
             <label>Đơn giá / cái (đồng)<input id="gGia" type="number" min="0" step="500" inputmode="numeric"></label>
             <label>Ngày giao<input id="gNgay" type="date"></label>
             <label>Hạn trả<input id="gHan" type="date"></label>
-            <label>Số cái đã trả<input id="gTra" type="number" min="0" inputmode="numeric"></label>
-            <label>QC đạt<input id="gDat" type="number" min="0" inputmode="numeric"></label>
-            <label>Lỗi trả sửa<input id="gLoi" type="number" min="0" inputmode="numeric"></label>
           </div>
           <label>Ghi chú<input id="gGhiChu" placeholder="VD: may cổ trước, lược eo"></label>
-          <p class="ghichu" id="gTien"></p>
           <p class="loi" id="gLoiMsg"></p>
           <div class="cuoi">
             <button class="nut phu" type="button" id="gHuy">Huỷ</button>
             <button class="nut" type="button" id="gLuu">Lưu dòng giao</button>
+          </div>
+        </div>
+        <div class="gmform an" id="qcForm">
+          <b id="qcTieuDe">Ghi lần nhận về / QC</b>
+          <div class="luoi">
+            <label>Ngày nhận về<input id="qNgay" type="date"></label>
+            <label>Số cái nhận về<input id="qNhan" type="number" min="1" inputmode="numeric"></label>
+            <label>Cần sửa (trả lại vệ tinh)<input id="qSua" type="number" min="0" inputmode="numeric" value="0"></label>
+            <label>Hư do vệ tinh may hỏng<input id="qHuMay" type="number" min="0" inputmode="numeric" value="0"></label>
+            <label>Hư do lỗi vải / cắt<input id="qHuXuong" type="number" min="0" inputmode="numeric" value="0"></label>
+          </div>
+          <label>Lý do hư / ghi chú QC<input id="qLyDo" placeholder="VD: 2 cái thủng vải ở thân trước"></label>
+          <p class="ghichu">Cái sửa và cái hư ở lại vệ tinh. Cái hư thì xưởng cấp lại vải để vệ tinh may lại. Chỉ trả công cái đạt.</p>
+          <p class="ghichu" id="qDat"></p>
+          <p class="loi" id="qLoiMsg"></p>
+          <div class="cuoi">
+            <button class="nut phu" type="button" id="qHuy">Huỷ</button>
+            <button class="nut" type="button" id="qLuu">Lưu lần QC</button>
           </div>
         </div>
         <button class="nut phu" type="button" id="gThem">+ Giao cho vệ tinh</button>
@@ -222,6 +246,9 @@
       async dsGiaoMay() { try { return tra(await sb.from("giao_may").select("*").order("ngay_giao")) || []; } catch (e) { return []; } },
       async taoGiaoMay(row) { return tra(await sb.from("giao_may").insert(row).select().single()); },
       async suaGiaoMay(id, patch) { return tra(await sb.from("giao_may").update(patch).eq("id", id).select().single()); },
+      async layGiaoMay(id) { return tra(await sb.from("giao_may").select("*").eq("id", id).single()); },
+      async dsQc() { try { return tra(await sb.from("qc_lan").select("*").order("lan")) || []; } catch (e) { return []; } },
+      async taoQc(row) { return tra(await sb.from("qc_lan").insert(row).select().single()); },
       async thoat() { await sb.auth.signOut(); }
     };
   }
@@ -240,19 +267,26 @@
       mk({ ma_don: "DH-002", ten_khach: "Shop mẫu B", san_pham: "Áo sơ mi lụa", so_luong: 80, chang: 5, nguoi_giu: "u2", dang_cho: "Chờ vải về", uu_tien: "P2", khoa_ky_thuat: true, khoa_rap: true, vao_chang_luc: ngay(1) }),
       mk({ ma_don: "DH-003", ten_khach: "Khách lạ C", san_pham: "Mẫu test", chang: 1, nguoi_giu: "u2", uu_tien: "P4", vao_chang_luc: ngay(0) }),
       mk({ ma_don: "DH-004", ten_khach: "Shop mẫu D", san_pham: "Quần suông", so_luong: 200, chang: 10, nguoi_giu: "u1", dang_cho: "Khách hẹn chuyển nốt 50%", uu_tien: "P0", vao_chang_luc: ngay(9), han_giao: "2026-11-01" }),
-      mk({ ma_don: "DH-005", ten_khach: "Shop mẫu E", san_pham: "Đầm suông", so_luong: 150, chang: 7, nguoi_giu: "u4", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, vao_chang_luc: ngay(2) }),
+      mk({ ma_don: "DH-005", ten_khach: "Shop mẫu E", san_pham: "Đầm suông", so_luong: 150, don_gia_gia_cong: 28000, chang: 7, nguoi_giu: "u4", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, vao_chang_luc: ngay(2) }),
       mk({ ma_don: "DH-006", ten_khach: "Shop mẫu F", san_pham: "Đầm lụa xoè", so_luong: 100, chang: 11, nguoi_giu: "u2", uu_tien: "P3", khoa_ky_thuat: true, khoa_vai: true, khoa_rap: true, da_thu_du: true, muc_hai_long: "hai_long", phan_hoi: "Form đẹp, khách đặt thêm 50 cái", vao_chang_luc: ngay(1) })
     ];
     const ls = [];
-    const vt = [{ id: "v1", ten: "Vệ tinh chị Tuyết", sdt: "", dang_lam: true }, { id: "v2", ten: "Vệ tinh anh Hùng", sdt: "", dang_lam: true }];
-    const tinhGM = (r) => {
-      if (r.so_dat > r.so_luong_giao) throw new Error("Số đạt không được lớn hơn số giao.");
-      if (r.so_dat + r.so_loi > r.so_luong_tra) throw new Error("Số đạt + số lỗi không được lớn hơn số đã trả.");
-      r.thanh_tien = r.so_dat * r.don_gia; return r;
+    const vt = [{ id: "v1", ma: "XM-A", ten: "Vệ tinh mẫu A", sdt: "", dang_lam: true }, { id: "v2", ma: "XM-B", ten: "Vệ tinh mẫu B", sdt: "", dang_lam: true }];
+    // Ví dụ của Sếp: giao 100, lần 1 nhận 100 → 90 đạt, 8 sửa, 2 hư (cấp lại vải); lần 2 nhận 8 sửa xong → 8 đạt; còn 2 cái đang may lại
+    const qc = [
+      { id: "q1", giao_may_id: "g1", lan: 1, ngay: "2026-11-08", so_nhan: 100, so_dat: 90, so_sua: 8, hu_may: 0, hu_xuong: 2, ly_do: "2 cái thủng vải ở thân trước, đã cấp lại vải" },
+      { id: "q2", giao_may_id: "g1", lan: 2, ngay: "2026-11-09", so_nhan: 8, so_dat: 8, so_sua: 0, hu_may: 0, hu_xuong: 0, ly_do: "" }
+    ];
+    const congLai = (g) => {
+      const ds = qc.filter((q) => q.giao_may_id === g.id).sort((a, b) => a.lan - b.lan);
+      const sum = (k) => ds.reduce((s, q) => s + q[k], 0);
+      g.so_luong_tra = sum("so_nhan"); g.so_dat = sum("so_dat"); g.so_hu_may = sum("hu_may"); g.so_hu_xuong = sum("hu_xuong");
+      g.so_kiem_lan1 = ds[0] ? ds[0].so_nhan - ds[0].hu_may - ds[0].hu_xuong : 0; g.so_dat_lan1 = ds[0] ? ds[0].so_dat : 0;
+      g.thanh_tien = g.so_dat * g.don_gia; return g;
     };
     const gm = [
-      tinhGM({ id: "g1", don_id: "d5", ve_tinh_id: "v1", so_luong_giao: 80, don_gia: 28000, ngay_giao: "2026-11-05", han_tra: "2026-11-12", so_luong_tra: 50, so_dat: 48, so_loi: 2, da_thanh_toan: false }),
-      tinhGM({ id: "g2", don_id: "d5", ve_tinh_id: "v2", so_luong_giao: 70, don_gia: 28000, ngay_giao: "2026-11-05", han_tra: "2026-11-12", so_luong_tra: 0, so_dat: 0, so_loi: 0, da_thanh_toan: false })
+      congLai({ id: "g1", don_id: "d5", ve_tinh_id: "v1", so_luong_giao: 100, don_gia: 28000, ngay_giao: "2026-11-05", han_tra: "2026-11-12", da_thanh_toan: false }),
+      congLai({ id: "g2", don_id: "d5", ve_tinh_id: "v2", so_luong_giao: 50, don_gia: 28000, ngay_giao: "2026-11-05", han_tra: "2026-11-12", da_thanh_toan: false })
     ];
     const doi = (o) => JSON.parse(JSON.stringify(o));
     function kiemKhoa(cu, moi) {
@@ -281,8 +315,19 @@
       async dsVeTinh() { return doi(vt); },
       async taoVeTinh(row) { const r = Object.assign({ id: "v" + (vt.length + 1), dang_lam: true }, row); vt.push(r); return doi(r); },
       async dsGiaoMay() { return doi(gm); },
-      async taoGiaoMay(row) { const r = tinhGM(Object.assign({ id: "g" + (gm.length + 1), so_luong_tra: 0, so_dat: 0, so_loi: 0, da_thanh_toan: false, ngay_giao: new Date().toISOString().slice(0, 10) }, row)); gm.push(r); return doi(r); },
-      async suaGiaoMay(idG, patch) { const r = gm.find((x) => x.id === idG); Object.assign(r, patch); tinhGM(r); return doi(r); },
+      async taoGiaoMay(row) { const r = congLai(Object.assign({ id: "g" + (gm.length + 1), da_thanh_toan: false, ngay_giao: new Date().toISOString().slice(0, 10) }, row)); gm.push(r); return doi(r); },
+      async suaGiaoMay(idG, patch) { const r = gm.find((x) => x.id === idG); Object.assign(r, patch); congLai(r); return doi(r); },
+      async layGiaoMay(idG) { return doi(gm.find((x) => x.id === idG)); },
+      async dsQc() { return doi(qc); },
+      async taoQc(row) {
+        const g = gm.find((x) => x.id === row.giao_may_id);
+        const daXong = qc.filter((q) => q.giao_may_id === g.id).reduce((s, q) => s + q.so_dat, 0);
+        const con = g.so_luong_giao - daXong;
+        if (row.so_nhan > con) throw new Error(`Vệ tinh chỉ còn giữ ${con} cái, không nhận về ${row.so_nhan} cái được.`);
+        if (row.so_dat + row.so_sua + row.hu_may + row.hu_xuong !== row.so_nhan) throw new Error("Đạt + sửa + hư phải bằng số nhận về.");
+        const r = Object.assign({ id: "q" + (qc.length + 1), lan: qc.filter((q) => q.giao_may_id === g.id).length + 1 }, row);
+        qc.push(r); congLai(g); return doi(r);
+      },
       async thoat() { location.href = "/"; }
     };
   }
@@ -290,9 +335,9 @@
   const db = CHAY_THU ? dbThu() : dbThat();
 
   // ---------- Trạng thái ----------
-  let toi = null, nhanVien = [], dsDon = [], dangMo = null, veTinh = [], giaoMay = [], gmDangSua = null;
+  let toi = null, nhanVien = [], dsDon = [], dangMo = null, veTinh = [], giaoMay = [], gmDangSua = null, qcLan = [];
   const tien = (n) => Math.round(n || 0).toLocaleString("vi-VN") + "đ";
-  const tenVT = (id) => (veTinh.find((v) => v.id === id) || {}).ten || "?";
+  const tenVT = (id) => { const v = veTinh.find((x) => x.id === id); return v ? (v.ma ? v.ma + " · " : "") + v.ten : "?"; };
   const loc = { cuatoi: false, chamdo: false, xong: false, tim: "" };
   const tenNV = (id) => (nhanVien.find((n) => n.id === id) || {}).ho_ten || "Chưa giao";
   const laQuanLy = () => toi && (toi.vai_tro === "admin" || toi.vai_tro === "quan_ly");
@@ -357,7 +402,7 @@
           (d.muc_hai_long ? `<span>${HAI_LONG[d.muc_hai_long]}</span>` : "");
         b.innerHTML =
           `<div class="dau"><span class="ma">${esc(d.ma_don)}</span><span class="p">${d.uu_tien}</span></div>` +
-          `<div class="khach">${esc(d.ten_khach)}${d.san_pham ? " · " + esc(d.san_pham) : ""}${d.so_luong ? " · " + d.so_luong + " sp" : ""}</div>` +
+          `<div class="khach">${esc(d.ten_khach)}${d.san_pham ? " · " + esc(d.san_pham) : ""}${d.so_luong ? " · " + d.so_luong + " sp" : ""}${d.don_gia_gia_cong && d.so_luong ? " · công " + tien(d.don_gia_gia_cong * d.so_luong) : ""}</div>` +
           (d.dang_cho ? `<div class="cho">⏳ ${esc(d.dang_cho)}</div>` : "") +
           `<div class="duoi"><span>👤 ${esc(tenNV(d.nguoi_giu))}</span>` +
           (n > NGAY_DO ? `<span class="chamdo">${n} ngày đứng yên</span>` : `<span>${n} ngày ở chặng</span>`) +
@@ -390,6 +435,8 @@
     $("fKhach").value = moi ? "" : d.ten_khach;
     $("fSanPham").value = moi ? "" : (d.san_pham || "");
     $("fSoLuong").value = moi ? "" : (d.so_luong ?? "");
+    $("fGiaGC").value = moi ? "" : (d.don_gia_gia_cong ?? "");
+    tinhTienGC();
     $("fGiu").value = moi ? toi.id : (d.nguoi_giu || "");
     $("fUuTien").value = moi ? "P4" : d.uu_tien;
     $("fHan").value = moi ? "" : (d.han_giao || "");
@@ -439,24 +486,85 @@
   }
 
   // ---------- Giao vệ tinh ----------
+  // Cái cần sửa và cái hư đều ở lại vệ tinh để may lại → còn ở vệ tinh = giao − đạt
+  const conOVT = (x) => x.so_luong_giao - x.so_dat;
+  const tongQC = (x, k) => qcLan.filter((q) => q.giao_may_id === x.id).reduce((s, q) => s + (q[k] || 0), 0);
+
   function veGiaoMay() {
     const g = giaoMay.filter((x) => x.don_id === dangMo.id);
     const giao = g.reduce((s, x) => s + x.so_luong_giao, 0);
     const dat = g.reduce((s, x) => s + x.so_dat, 0);
-    const conLai = (dangMo.so_luong || 0) - giao;
     $("gmTong").textContent = g.length ? `· đã giao ${giao}${dangMo.so_luong ? "/" + dangMo.so_luong : ""} · đạt ${dat} · tiền công ${tien(g.reduce((s, x) => s + x.thanh_tien, 0))}` : "";
     $("gmDs").innerHTML = g.length ? g.map((x) => {
-      const tre = x.han_tra && x.han_tra < homNay() && x.so_dat + x.so_loi < x.so_luong_giao;
+      const con = conOVT(x);
+      const tre = x.han_tra && x.han_tra < homNay() && con > 0;
+      const lan = qcLan.filter((q) => q.giao_may_id === x.id).sort((a, b) => a.lan - b.lan);
+      const pct = x.so_kiem_lan1 ? Math.round(x.so_dat_lan1 * 100 / x.so_kiem_lan1) : null;
+      const huMay = x.so_hu_may || 0, huVai = x.so_hu_xuong || 0;
+      const bangQc = lan.length ? `<div class="cuonqc"><table class="qct"><thead><tr><th>Lần</th><th>Ngày</th><th>Nhận</th><th>Đạt</th><th>Sửa</th><th>Hư do may</th><th>Hư do vải</th></tr></thead><tbody>` +
+        lan.map((q) => `<tr><td>${q.lan}</td><td>${ngayVN(q.ngay)}</td><td>${q.so_nhan}</td><td><b>${q.so_dat}</b></td><td>${q.so_sua}</td><td>${q.hu_may}</td><td>${q.hu_xuong}</td></tr>` +
+          (q.ly_do ? `<tr><td></td><td colspan="6" class="so">${esc(q.ly_do)}</td></tr>` : "")).join("") +
+        `<tr class="tong"><td colspan="3">Tổng</td><td>${x.so_dat}</td><td>${tongQC(x, "so_sua")}</td><td>${huMay}</td><td>${huVai}</td></tr></tbody></table></div>` : '<div class="so">Chưa nhận về lần nào.</div>';
       return `<li><div class="tren"><span>${esc(tenVT(x.ve_tinh_id))}</span><span>${tien(x.thanh_tien)}${x.da_thanh_toan ? ' · <span class="datra">đã trả</span>' : ""}</span></div>` +
-        `<div class="so">Giao ${x.so_luong_giao} × ${tien(x.don_gia)} · ${ngayVN(x.ngay_giao)}${x.han_tra ? ` · <span class="${tre ? "trehan" : ""}">hạn ${ngayVN(x.han_tra)}</span>` : ""}</div>` +
-        `<div class="so">Đã trả ${x.so_luong_tra} · QC đạt <b>${x.so_dat}</b> · lỗi ${x.so_loi}${x.ghi_chu ? " · " + esc(x.ghi_chu) : ""}</div>` +
-        `<button type="button" data-gm="${x.id}">Ghi hàng trả / sửa</button></li>`;
-    }).join("") : '<li class="so">Chưa giao vệ tinh nào.' + (conLai > 0 ? "" : "") + "</li>";
+        `<div class="so">Giao ${x.so_luong_giao} × ${tien(x.don_gia)} · ${ngayVN(x.ngay_giao)}${x.han_tra ? ` · <span class="${tre ? "trehan" : ""}">hạn ${ngayVN(x.han_tra)}</span>` : ""}${x.ghi_chu ? " · " + esc(x.ghi_chu) : ""}</div>` +
+        bangQc +
+        `<div class="so">${con ? `Còn ở vệ tinh <b>${con}</b> cái (đang sửa / may lại)` : '<span class="datra">Đã đạt đủ số giao</span>'}${pct !== null ? ` · Đạt lần 1 <b>${pct}%</b> (${x.so_dat_lan1}/${x.so_kiem_lan1})` : ""}</div>` +
+        (huMay + huVai ? `<div class="so">Xưởng cấp lại vải: <b>${huMay + huVai}</b> cái (${huMay} do may hỏng · ${huVai} do lỗi vải/cắt)</div>` : "") +
+        `<div class="so">Tiền công: ${x.so_dat} cái đạt × ${tien(x.don_gia)} = <b>${tien(x.thanh_tien)}</b></div>` +
+        `<div class="hang">${con > 0 && !x.da_thanh_toan ? `<button type="button" data-qc="${x.id}">+ Ghi lần nhận về / QC</button>` : ""}<button type="button" data-gm="${x.id}">Sửa dòng giao</button></div></li>`;
+    }).join("") : '<li class="so">Chưa giao vệ tinh nào.</li>';
     $("gmDs").querySelectorAll("[data-gm]").forEach((b) => b.addEventListener("click", () => moGM(giaoMay.find((x) => x.id === b.dataset.gm))));
+    $("gmDs").querySelectorAll("[data-qc]").forEach((b) => b.addEventListener("click", () => moQC(giaoMay.find((x) => x.id === b.dataset.qc))));
   }
 
+  let qcDangGhi = null;
+  function moQC(x) {
+    qcDangGhi = x;
+    $("gmForm").classList.add("an");
+    const con = conOVT(x);
+    $("qcTieuDe").textContent = `${tenVT(x.ve_tinh_id)} · lần QC ${qcLan.filter((q) => q.giao_may_id === x.id).length + 1} · vệ tinh đang giữ ${con} cái`;
+    $("qNgay").value = homNay();
+    $("qNhan").value = con;
+    $("qSua").value = 0; $("qHuMay").value = 0; $("qHuXuong").value = 0; $("qLyDo").value = "";
+    $("qLoiMsg").textContent = "";
+    tinhQC();
+    $("qcForm").classList.remove("an"); $("gThem").classList.add("an");
+    $("qNhan").focus();
+  }
+  function soQC() {
+    const n = (i) => parseInt($(i).value, 10) || 0;
+    const nhan = n("qNhan"), sua = n("qSua"), hm = n("qHuMay"), hx = n("qHuXuong");
+    return { nhan, sua, hm, hx, dat: nhan - sua - hm - hx };
+  }
+  function tinhQC() {
+    const s = soQC();
+    $("qDat").innerHTML = s.dat < 0 ? '<span class="trehan">Sửa + hư đang nhiều hơn số nhận về.</span>' :
+      `QC đạt: <b>${s.dat}</b> cái = ${s.nhan} nhận về − ${s.sua} sửa − ${s.hm + s.hx} hư`;
+  }
+  async function luuQC() {
+    const s = soQC(), x = qcDangGhi, con = conOVT(x);
+    if (s.nhan <= 0) { $("qLoiMsg").textContent = "Nhập số cái nhận về."; return; }
+    if (s.nhan > con) { $("qLoiMsg").textContent = `Vệ tinh chỉ còn giữ ${con} cái.`; return; }
+    if (s.dat < 0) { $("qLoiMsg").textContent = "Sửa + hư không được nhiều hơn số nhận về."; return; }
+    if ((s.hm || s.hx) && !$("qLyDo").value.trim()) { $("qLoiMsg").textContent = "Có cái hư thì ghi lý do để biết lỗi ở khâu nào."; return; }
+    $("qLuu").disabled = true;
+    try {
+      const r = await db.taoQc({ giao_may_id: x.id, ngay: $("qNgay").value || homNay(), so_nhan: s.nhan, so_dat: s.dat, so_sua: s.sua, hu_may: s.hm, hu_xuong: s.hx, ly_do: $("qLyDo").value.trim() || null });
+      qcLan.push(r);
+      const g = await db.layGiaoMay(x.id); giaoMay = giaoMay.map((y) => (y.id === g.id ? g : y));
+      $("qcForm").classList.add("an"); $("gThem").classList.remove("an");
+      veGiaoMay(); ve(); bao(`Đã ghi lần QC ${r.lan}: đạt ${s.dat}${s.sua ? ", " + s.sua + " cái trả lại sửa" : ""}`);
+    } catch (e) { $("qLoiMsg").textContent = loiDe(e); }
+    finally { $("qLuu").disabled = false; }
+  }
+  $("qHuy").addEventListener("click", () => { $("qcForm").classList.add("an"); $("gThem").classList.remove("an"); });
+  $("qLuu").addEventListener("click", luuQC);
+  ["qNhan", "qSua", "qHuMay", "qHuXuong"].forEach((i) => $(i).addEventListener("input", tinhQC));
+
   function dienVeTinh() {
-    $("gVeTinh").innerHTML = veTinh.filter((v) => v.dang_lam !== false).map((v) => `<option value="${v.id}">${esc(v.ten)}</option>`).join("") +
+    $("gVeTinh").innerHTML = veTinh.filter((v) => v.dang_lam !== false)
+      .sort((a, b) => (a.ma || "").localeCompare(b.ma || "", "vi", { numeric: true }))
+      .map((v) => `<option value="${v.id}">${esc(tenVT(v.id))}</option>`).join("") +
       '<option value="__moi">＋ Thêm vệ tinh mới…</option>';
   }
 
@@ -466,24 +574,16 @@
     const daGiao = giaoMay.filter((y) => y.don_id === dangMo.id).reduce((s, y) => s + y.so_luong_giao, 0);
     $("gVeTinh").value = x ? x.ve_tinh_id : (veTinh[0] ? veTinh[0].id : "__moi");
     $("gGiao").value = x ? x.so_luong_giao : Math.max(0, (dangMo.so_luong || 0) - daGiao) || "";
-    $("gGia").value = x ? x.don_gia : "";
+    $("gGia").value = x ? x.don_gia : (dangMo.don_gia_gia_cong ?? "");
     $("gNgay").value = x ? x.ngay_giao : homNay();
     $("gHan").value = x ? (x.han_tra || "") : "";
-    $("gTra").value = x ? x.so_luong_tra : 0;
-    $("gDat").value = x ? x.so_dat : 0;
-    $("gLoi").value = x ? x.so_loi : 0;
     $("gGhiChu").value = x ? (x.ghi_chu || "") : "";
     $("gLoiMsg").textContent = "";
     const khoaTien = x && x.da_thanh_toan && !laQuanLy();
-    ["gGia", "gDat"].forEach((i) => { $(i).disabled = khoaTien; });
-    tinhTienGM();
+    ["gGia", "gGiao"].forEach((i) => { $(i).disabled = khoaTien; });
+    $("qcForm").classList.add("an");
     $("gmForm").classList.remove("an"); $("gThem").classList.add("an");
     $("gGiao").focus();
-  }
-
-  function tinhTienGM() {
-    const dat = +$("gDat").value || 0, gia = +$("gGia").value || 0;
-    $("gTien").textContent = `Tiền công dòng này: ${dat} cái đạt × ${tien(gia)} = ${tien(dat * gia)}`;
   }
 
   async function luuGM() {
@@ -491,13 +591,11 @@
     const row = {
       so_luong_giao: parseInt($("gGiao").value, 10), don_gia: parseInt($("gGia").value, 10),
       ngay_giao: $("gNgay").value || homNay(), han_tra: $("gHan").value || null,
-      so_luong_tra: parseInt($("gTra").value, 10) || 0, so_dat: parseInt($("gDat").value, 10) || 0, so_loi: parseInt($("gLoi").value, 10) || 0,
       ghi_chu: $("gGhiChu").value.trim() || null
     };
     if (!(row.so_luong_giao > 0)) { $("gLoiMsg").textContent = "Nhập số cái giao."; return; }
     if (!(row.don_gia >= 0) || $("gGia").value === "") { $("gLoiMsg").textContent = "Nhập đơn giá một cái."; return; }
-    if (row.so_dat > row.so_luong_giao) { $("gLoiMsg").textContent = "Số đạt không được lớn hơn số giao."; return; }
-    if (row.so_dat + row.so_loi > row.so_luong_tra) { $("gLoiMsg").textContent = "Số đạt + số lỗi không được lớn hơn số đã trả."; return; }
+    if (gmDangSua && row.so_luong_giao < gmDangSua.so_dat) { $("gLoiMsg").textContent = "Số giao không được ít hơn số đã QC đạt."; return; }
     $("gLuu").disabled = true;
     try {
       if (vtId === "__moi") {
@@ -507,7 +605,7 @@
       }
       row.ve_tinh_id = vtId;
       if (gmDangSua) {
-        if (gmDangSua.da_thanh_toan && !laQuanLy()) { delete row.don_gia; delete row.so_dat; }
+        if (gmDangSua.da_thanh_toan && !laQuanLy()) { delete row.don_gia; delete row.so_luong_giao; }
         const r = await db.suaGiaoMay(gmDangSua.id, row); giaoMay = giaoMay.map((y) => (y.id === r.id ? r : y));
       } else {
         row.don_id = dangMo.id; const r = await db.taoGiaoMay(row); giaoMay.push(r);
@@ -521,11 +619,18 @@
   $("gThem").addEventListener("click", () => moGM(null));
   $("gHuy").addEventListener("click", () => { $("gmForm").classList.add("an"); $("gThem").classList.remove("an"); });
   $("gLuu").addEventListener("click", luuGM);
-  ["gDat", "gGia"].forEach((i) => $(i).addEventListener("input", tinhTienGM));
+
+  function tinhTienGC() {
+    const sl = parseInt($("fSoLuong").value, 10) || 0, gia = parseInt($("fGiaGC").value, 10) || 0;
+    $("fTienGC").textContent = sl && gia ? `Tiền gia công cả đơn: ${sl} cái × ${tien(gia)} = ${tien(sl * gia)}` : "";
+  }
+  ["fSoLuong", "fGiaGC"].forEach((i) => $(i).addEventListener("input", tinhTienGC));
 
   function docForm() {
     const sl = $("fSoLuong").value;
+    const gc = $("fGiaGC").value;
     return {
+      don_gia_gia_cong: gc === "" ? null : parseInt(gc, 10),
       ma_don: $("fMa").value.trim(),
       ten_khach: $("fKhach").value.trim(),
       san_pham: $("fSanPham").value.trim() || null,
@@ -583,7 +688,7 @@
   $("tim").addEventListener("input", (e) => { loc.tim = e.target.value; ve(); });
 
   async function taiLai() {
-    try { [nhanVien, dsDon, veTinh, giaoMay] = await Promise.all([db.dsNhanVien(), db.dsDon(), db.dsVeTinh(), db.dsGiaoMay()]); dienChon(); ve(); }
+    try { [nhanVien, dsDon, veTinh, giaoMay, qcLan] = await Promise.all([db.dsNhanVien(), db.dsDon(), db.dsVeTinh(), db.dsGiaoMay(), db.dsQc()]); dienChon(); ve(); }
     catch (e) { $("bang").innerHTML = `<div class="giua-trang">${esc(loiDe(e))}</div>`; }
   }
 
