@@ -93,12 +93,14 @@
   .cuoi { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
   .ghichu { font-size:12px; color:var(--phu); }
   .bao { position:fixed; left:50%; bottom:16px; transform:translateX(-50%); background:var(--chu); color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:20; max-width:calc(100vw - 32px); }
-  .thu { background:#fff4d6; border-bottom:1px solid #e9c46a; padding:8px 16px; font-size:13px; }
+  .thu { position:sticky; top:0; z-index:10; background:#b3261e; color:#fff; padding:10px 16px; font-size:14px; }
+  .thu a { color:#fff; font-weight:700; text-decoration:underline; margin-left:6px; }
+  body.chaythu header { top:41px; }
   .giua-trang { padding:60px 16px; text-align:center; color:var(--phu); }
 </style>
 </head>
 <body>
-  <div id="thanhThu" class="thu an">Đang xem <b>bản chạy thử</b> với đơn mẫu, không lưu vào hệ thống.</div>
+  <div id="thanhThu" class="thu an">⚠️ <b>BẢN CHẠY THỬ – KHÔNG LƯU.</b> Đơn nhập ở đây sẽ mất khi tải lại trang. <a href="/">Vào bảng thật (đăng nhập)</a></div>
   <header>
     <div class="hang">
       <a class="logo" href="/">VANSILK</a>
@@ -675,7 +677,8 @@
     try {
       if (!dangMo) {
         f.chang = parseInt($("fChang").value, 10);
-        const moi = await db.tao(f); dsDon.push(moi); bao("Đã tạo đơn " + moi.ma_don);
+        const moi = await db.tao(f); dsDon.push(moi);
+        bao(CHAY_THU ? "Bản chạy thử: đơn " + moi.ma_don + " KHÔNG được lưu, tải lại trang là mất." : "Đã tạo đơn " + moi.ma_don);
       } else {
         const patch = Object.assign(f, patchThem || {});
         if (!laQuanLy()) delete patch.ma_don;
@@ -724,7 +727,8 @@
 
   async function batDau() {
     $("thanhThu").classList.toggle("an", !CHAY_THU);
-    if (CHAY_THU) $("linkGiaCong").href = "/gia-cong/?thu=1";
+    document.body.classList.toggle("chaythu", CHAY_THU);
+    if (CHAY_THU) { $("linkGiaCong").href = "/gia-cong/?thu=1"; document.title = "CHẠY THỬ – " + document.title; }
     $("dangTai").classList.remove("an");
     const phien = await db.phien();
     if (!phien) { location.href = "/"; return; }
